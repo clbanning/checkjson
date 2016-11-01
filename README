@@ -1,0 +1,55 @@
+Check that a JSON object's keys correspond to a struct's exported members or JSON tags.
+
+USAGE
+
+https://godoc.org/github.com/clbanning/checkjson
+
+EXAMPLE
+
+	import "github.com/clbanning/checkjson"
+
+	type Home struct {
+		Addr string
+		Port int
+	}
+		
+	type config struct {
+		Id       string
+		Address  *Home `json:"addr"`
+		Failover []*Home
+		Log      bool
+	}
+
+	configData := []byte(`
+		{
+			"id":"example", 
+			"addr":{
+				"addr":"127.0.0.1", 
+				"port":12345
+			},
+			"failover":[{
+					"addr":"127.0.0.1", 
+					"port":12346
+				},{
+					"add":"24.33.6.1",
+					"port":80
+				}],
+			"log":true
+		}`)
+
+	c := new(config)
+	if err := checkjson.Validate(configData, c); err != nil {
+		// handle error:
+		// checking subkeys of JSON key: failover - [list value #2] no member for JSON key: add
+	}
+		
+
+MOTIVATION
+
+I make extensive use of JSON configuration files.  Sometimes the files are large or
+complex and JSON keyscan be prone to typos or case errors. The "encoding/json" decoder 
+just ignores JSON keys that do not correspond to struct member names/tags; this can 
+result in unexpected initialization errors or the failure to override defaults.  
+The checkjson.Validate() function identifies JSON object keys that cannot be decoded 
+to a member of the struct using the "encoding/json" package.
+
