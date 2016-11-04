@@ -40,7 +40,7 @@ EXAMPLE
 	c := new(config)
 	if err := checkjson.Validate(configData, c); err != nil {
 		// handle error:
-		// checking subkeys of JSON key: failover - [list value #2] no member for JSON key: add
+		// checking subkeys of JSON key: failover - [array value #2] no member for JSON key: add
 	}
 		
 
