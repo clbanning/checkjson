@@ -42,7 +42,7 @@ EXAMPLE
 	c := new(config)
 	if err := checkjson.Validate(configData, c); err != nil {
 		// handle error: 
-		// checking subkeys of JSON key: failover - [array value #2] no member for JSON key: add
+		// checking subkeys of JSON key: failover - [array element #2] no member for JSON key: add
 	}
 */
 package checkjson
@@ -126,7 +126,7 @@ func checkFields(mv interface{}, val reflect.Value) error {
 		//      This forces all of them to be regular and w/o typos in key labels.
 		for n, sl := range slice {
 			if err := checkFields(sl, sval); err != nil {
-				return fmt.Errorf("[array value #%d] %s", n+1, err.Error())
+				return fmt.Errorf("[array element #%d] %s", n+1, err.Error())
 			}
 		}
 		return nil // done with reflect.Slice value
