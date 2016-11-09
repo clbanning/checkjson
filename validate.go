@@ -191,8 +191,8 @@ func checkFields(mv interface{}, val reflect.Value) error {
 }
 
 // ResolveJSONError tries to augment json.Unmarshal errors with
-// the JSON context - key:value - if possible.  This is useful 
-// when errors occur when unmarshaling large JSON objects.
+// the JSON context - key:value - if possible.  (This is useful 
+// when errors occur when unmarshaling large JSON objects.)
 func ResolveJSONError(data []byte, err error) error {
 	if e, ok := err.(*json.UnmarshalTypeError); ok {
 		// grab stuff ahead of the error
