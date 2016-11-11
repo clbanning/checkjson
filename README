@@ -47,7 +47,7 @@ EXAMPLE
 MOTIVATION
 
 I make extensive use of JSON configuration files.  Sometimes the files are large or
-complex and JSON keyscan be prone to typos or case errors. The "encoding/json" decoder 
+complex and JSON keys can be prone to typos or case errors. The "encoding/json" decoder 
 just ignores JSON keys that do not correspond to struct member names/tags; this can 
 result in unexpected initialization errors or the failure to override defaults. 
 The checkjson.Validate() function identifies JSON object keys that cannot be decoded 
