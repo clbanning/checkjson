@@ -108,8 +108,8 @@ func checkFields(mv interface{}, val reflect.Value) error {
 		return nil
 	}
 
-	// 2. If its a slice then 'm' should hold a []interface{} value.
-	//    Loop through the members of m and see that they are valid relative
+	// 2. If its a slice then 'mv' should hold a []interface{} value.
+	//    Loop through the members of 'mv' and see that they are valid relative
 	//    to the <T> of val []<T>.
 	if typ.Kind() == reflect.Slice {
 		tval := typ.Elem()
@@ -117,6 +117,7 @@ func checkFields(mv interface{}, val reflect.Value) error {
 			tval = tval.Elem()
 		}
 		// slice may be nil, so create a Value of it's type
+		// 'mv' must be of type []interface{}
 		sval := reflect.New(tval)
 		slice, ok := mv.([]interface{})
 		if !ok {
