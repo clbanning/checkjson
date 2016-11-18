@@ -71,3 +71,32 @@ func TestJSONSubKeys(t *testing.T) {
 	}
 	fmt.Println("missing keys:", mems)
 }
+
+func TestJSONKeysWithTags(t *testing.T) {
+	fmt.Println("===================== TestJSONKeysWithTags ...")
+
+	type test struct {
+		Ok  bool
+		Why string `json:"whynot"`
+	}
+	tv := test{}
+	data := []byte(`{"ok":true,"whynot":"it's a test"}`)
+	mems, err := MissingJSONKeys(data, tv)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if len(mems) > 0 {
+		t.Fatalf(fmt.Sprintf("len(mems) == %d >> %v", len(mems), mems))
+	}
+
+	data = []byte(`{"ok":true,"why":"it's not a test"}`)
+	mems, err = MissingJSONKeys(data, tv)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if len(mems) != 1 {
+		t.Fatalf(fmt.Sprintf("missing mems: %d - %#v", len(mems), mems))
+	}
+	fmt.Println("missing keys:", mems)
+}
+
