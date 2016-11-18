@@ -227,7 +227,8 @@ var skipmembers = []skipmems{}
 
 // SetMembersToIgnore creates a list of exported struct member names that should not be checked
 // for as keys in the JSON object.  For hierarchical struct members provide the full path for
-// the member name using dot-notation.
+// the member name using dot-notation. Calling SetMembersToIgnore with no arguments - 
+// SetMembersToIgnore() - will clear the list.
 func SetMembersToIgnore(s ...string) {
 	if len(s) == 0 {
 		skipmembers = skipmembers[:0] // remove "config"
@@ -241,8 +242,9 @@ func SetMembersToIgnore(s ...string) {
 
 // MissingJSONKeys returns a list of struct members that will NOT be set
 // by unmarshaling the JSON object; rather, they will assume their default
-// value. For nested structs, member labels are the dot-separate hierachical
-// path for the missing JSON key.
+// value. For nested structs, member labels are the dot-notation hierachical
+// path for the missing JSON key.  Specific struct members can be igored
+// when scanning the JSON object by declaring them using SetMembersToIgnore().
 // (NOTE: JSON object keys are treated as case insensitive, i.e., there
 // is no distiction between "key":"value" and "Key":"value".)
 func MissingJSONKeys(b []byte, ctx interface{}) ([]string, error) {
