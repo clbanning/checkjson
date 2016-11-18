@@ -218,23 +218,31 @@ func ResolveJSONError(data []byte, err error) error {
 
 // ==== from: https://forum.golangbridge.org/t/how-to-detect-missing-bool-field-in-json-post-data/3861
 
-var skipmembers = []string{}
+type skipmems struct {
+	val   string
+	depth int
+}
 
+var skipmembers = []skipmems{}
+
+// SetMembersToIgnore creates a list of exported struct member names that should not be checked
+// for as keys in the JSON object.  For hierarchical struct members provide the full path for
+// the member name using dot-notation.
 func SetMembersToIgnore(s ...string) {
 	if len(s) == 0 {
 		skipmembers = skipmembers[:0] // remove "config"
 		return
 	}
-	skipmembers = make([]string, len(s))
+	skipmembers = make([]skipmems, len(s))
 	for i, v := range s {
-		skipmembers[i] = strings.ToLower(v)
+		skipmembers[i] = skipmems{strings.ToLower(v), len(strings.Split(v, "."))}
 	}
 }
 
 // MissingJSONKeys returns a list of struct members that will NOT be set
 // by unmarshaling the JSON object; rather, they will assume their default
 // value. For nested structs, member labels are the dot-separate hierachical
-// path for the missing JSON key.  
+// path for the missing JSON key.
 // (NOTE: JSON object keys are treated as case insensitive, i.e., there
 // is no distiction between "key":"value" and "Key":"value".)
 func MissingJSONKeys(b []byte, ctx interface{}) ([]string, error) {
@@ -335,10 +343,26 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) e
 	// var ok bool
 	var v interface{}
 	var err error
+	var cmemdepth int
+	if len(cmem) > 0 {
+		cmemdepth = len(strings.Split(cmem, ".")) + 1 // struct hierarchy
+	} else {
+		cmemdepth = 1
+	}
+	lcmem := strings.ToLower(cmem)
 	for _, field := range fields {
 		lm := strings.ToLower(field.name)
 		for _, sm := range skipmembers {
-			if lm == sm {
+			// strip off leading dot-notation per cmem
+			// skip any skipmembers values that aren't at same depth
+			if cmemdepth != sm.depth {
+				continue
+			}
+			if len(cmem) > 0 {
+				if lcmem+`.`+lm == sm.val {
+					goto next
+				}
+			} else if lm == sm.val {
 				goto next
 			}
 		}

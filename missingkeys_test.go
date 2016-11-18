@@ -100,3 +100,37 @@ func TestJSONKeysWithTags(t *testing.T) {
 	fmt.Println("missing keys:", mems)
 }
 
+func TestJSONMissingSkipMems(t *testing.T) {
+	fmt.Println("===================== TestJSONMissingSkipMems ...")
+
+	type test3 struct {
+		Something string
+		Else      string
+	}
+
+	type test2 struct {
+		Why     string
+		Not     string
+		Another test3
+	}
+
+	type test struct {
+		Ok   bool
+		Why  string
+		More test2
+	}
+
+	tv := test{}
+	data := []byte(`{"ok":true,"more":{"why":"again","another":{"else":"ok"}}}`)
+	SetMembersToIgnore("why", "more.not", "more.another.something")
+
+	mems, err := MissingJSONKeys(data, tv)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if len(mems) != 0 {
+		t.Fatalf(fmt.Sprintf("missing mems: %d - %#v", len(mems), mems))
+	}
+	fmt.Println("missing keys:", mems)
+	SetMembersToIgnore() // reset to default
+}
