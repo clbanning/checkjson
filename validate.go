@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// The checkjson package identifies JSON object's keys that cannot be decoded 
+// The checkjson package identifies JSON object's keys that cannot be decoded
 // to a member of a struct using the "encoding/json" package.
 /*
 EXAMPLE
@@ -14,7 +14,7 @@ EXAMPLE
 		Addr string
 		Port int
 	}
-		
+
 	type config struct {
 		Id       string
 		Address  *Home `json:"addr"`
@@ -24,13 +24,13 @@ EXAMPLE
 
 	configData := []byte(`
 		{
-			"id":"example", 
+			"id":"example",
 			"addr":{
-				"addr":"127.0.0.1", 
+				"addr":"127.0.0.1",
 				"port":12345
 			},
 			"failover":[{
-					"addr":"127.0.0.1", 
+					"addr":"127.0.0.1",
 					"port":12346
 				},{
 					"add":"24.33.6.1",
@@ -41,7 +41,7 @@ EXAMPLE
 
 	c := new(config)
 	if err := checkjson.Validate(configData, c); err != nil {
-		// handle error: 
+		// handle error:
 		// checking subkeys of JSON key: failover - [array element #2] no member for JSON key: add
 	}
 */
@@ -53,7 +53,6 @@ import (
 	"reflect"
 	"strings"
 )
-
 
 // List of JSON keys to NOT validate.
 var skipkeys = []string{"config"}
@@ -192,7 +191,7 @@ func checkFields(mv interface{}, val reflect.Value) error {
 }
 
 // ResolveJSONError tries to augment json.Unmarshal errors with
-// the JSON context - key:value - if possible.  (This is useful 
+// the JSON context - key:value - if possible.  (This is useful
 // when errors occur when unmarshaling large JSON objects.)
 func ResolveJSONError(data []byte, err error) error {
 	if e, ok := err.(*json.UnmarshalTypeError); ok {
@@ -215,4 +214,157 @@ func ResolveJSONError(data []byte, err error) error {
 	}
 	// just report all other unmarshal errors
 	return err
+}
+
+// ==== from: https://forum.golangbridge.org/t/how-to-detect-missing-bool-field-in-json-post-data/3861
+
+var skipmembers = []string{}
+
+func SetMembersToIgnore(s ...string) {
+	if len(s) == 0 {
+		skipmembers = skipmembers[:0] // remove "config"
+		return
+	}
+	skipmembers = make([]string, len(s))
+	for i, v := range s {
+		skipmembers[i] = strings.ToLower(v)
+	}
+}
+
+// MissingJSONKeys returns a list of struct members that will NOT be set
+// by unmarshaling the JSON object; rather, they will assume their default
+// value. For nested structs, member labels are the dot-separate hierachical
+// path for the missing JSON key.  
+// (NOTE: JSON object keys are treated as case insensitive, i.e., there
+// is no distiction between "key":"value" and "Key":"value".)
+func MissingJSONKeys(b []byte, ctx interface{}) ([]string, error) {
+	s := make([]string, 0)
+	m := make(map[string]interface{})
+	if err := json.Unmarshal(b, &m); err != nil {
+		return s, ResolveJSONError(b, err)
+	}
+	if err := checkMembers(m, reflect.ValueOf(ctx), &s, ""); err != nil {
+		return s, err
+	}
+	return s, nil
+}
+
+// cmem is the parent struct member for nested structs
+func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) error {
+	// 1. Convert any pointer value.
+	if val.Kind() == reflect.Ptr {
+		val = reflect.Indirect(val) // convert ptr to struc
+	}
+	// zero Value?
+	if !val.IsValid() {
+		return nil
+	}
+	typ := val.Type()
+
+	// json.RawMessage is a []byte/[]uint8 and has Kind() == reflect.Slice
+	if typ.Name() == "RawMessage" {
+		return nil
+	}
+
+	// 2. If its a slice then 'mv' should hold a []interface{} value.
+	//    Loop through the members of 'mv' and see that they are valid relative
+	//    to the <T> of val []<T>.
+	if typ.Kind() == reflect.Slice {
+		tval := typ.Elem()
+		if tval.Kind() == reflect.Ptr {
+			tval = tval.Elem()
+		}
+		// slice may be nil, so create a Value of it's type
+		// 'mv' must be of type []interface{}
+		sval := reflect.New(tval)
+		slice, ok := mv.([]interface{})
+		if !ok {
+			return fmt.Errorf("JSON value not an array")
+		}
+		// 2.1. Check members of JSON array.
+		//      This forces all of them to be regular and w/o typos in key labels.
+		for n, sl := range slice {
+			// cmem is the member name for the slice - []<T> - value
+			if err := checkMembers(sl, sval, s, cmem); err != nil {
+				return fmt.Errorf("[array element #%d] %s", n+1, err.Error())
+			}
+		}
+		return nil // done with reflect.Slice value
+	}
+
+	// 3a. Ignore anything that's not a struct.
+	if typ.Kind() != reflect.Struct {
+		return nil // just ignore it - don't look for k:v pairs
+	}
+	// 3b. map value must represent k:v pairs
+	mm, ok := mv.(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("JSON object does not have k:v pairs for member: %s",
+			typ.Name)
+	}
+	// 3c. Coerce keys to lower case.
+	mkeys := make(map[string]interface{}, len(mm))
+	for k, v := range mm {
+		mkeys[strings.ToLower(k)] = v
+	}
+
+	// 4. Build the list of struct field name:value
+	//    We make every key (field) label look like an exported label - "Fieldname".
+	//    If there is a JSON tag it is used instead of the field label, and saved to
+	//    insure that the spec'd tag matches the JSON key exactly.
+	type fieldSpec struct {
+		name string
+		val  reflect.Value
+		tag  string
+	}
+	fieldCnt := val.NumField()
+	fields := make([]*fieldSpec, fieldCnt) // use a list so members are in sequence
+	for i := 0; i < fieldCnt; i++ {
+		if len(typ.Field(i).PkgPath) > 0 {
+			continue // field is NOT exported
+		}
+		tag := typ.Field(i).Tag.Get("json")
+		if tag == "" {
+			fields[i] = &fieldSpec{typ.Field(i).Name, val.Field(i), ""}
+		} else {
+			fields[i] = &fieldSpec{typ.Field(i).Name, val.Field(i), tag}
+		}
+	}
+
+	// 5. check that field names/tags have corresponding map key
+	// var ok bool
+	var v interface{}
+	var err error
+	for _, field := range fields {
+		lm := strings.ToLower(field.name)
+		for _, sm := range skipmembers {
+			if lm == sm {
+				goto next
+			}
+		}
+		if len(field.tag) > 0 {
+			v, ok = mkeys[field.tag]
+		} else {
+			v, ok = mkeys[lm]
+		}
+		if !ok {
+			if len(cmem) > 0 {
+				*s = append(*s, cmem+`.`+field.name)
+			} else {
+				*s = append(*s, field.name)
+			}
+			goto next // don't drill down further; no key in JSON object
+		}
+		if len(cmem) > 0 {
+			err = checkMembers(v, field.val, s, cmem+`.`+field.name)
+		} else {
+			err = checkMembers(v, field.val, s, field.name)
+		}
+		if err != nil { // could be nested structs
+			return fmt.Errorf("checking submembers of member: %s - %s", cmem, err.Error())
+		}
+	next:
+	}
+
+	return nil
 }
