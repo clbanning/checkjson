@@ -227,11 +227,11 @@ var skipmembers = []skipmems{}
 
 // SetMembersToIgnore creates a list of exported struct member names that should not be checked
 // for as keys in the JSON object.  For hierarchical struct members provide the full path for
-// the member name using dot-notation. Calling SetMembersToIgnore with no arguments - 
+// the member name using dot-notation. Calling SetMembersToIgnore with no arguments -
 // SetMembersToIgnore() - will clear the list.
 func SetMembersToIgnore(s ...string) {
 	if len(s) == 0 {
-		skipmembers = skipmembers[:0] // remove "config"
+		skipmembers = skipmembers[:0]
 		return
 	}
 	skipmembers = make([]skipmems, len(s))
@@ -355,7 +355,6 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) e
 	for _, field := range fields {
 		lm := strings.ToLower(field.name)
 		for _, sm := range skipmembers {
-			// strip off leading dot-notation per cmem
 			// skip any skipmembers values that aren't at same depth
 			if cmemdepth != sm.depth {
 				continue
