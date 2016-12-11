@@ -345,11 +345,9 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) e
 	// var ok bool
 	var v interface{}
 	var err error
-	var cmemdepth int
+	cmemdepth := 1
 	if len(cmem) > 0 {
 		cmemdepth = len(strings.Split(cmem, ".")) + 1 // struct hierarchy
-	} else {
-		cmemdepth = 1
 	}
 	lcmem := strings.ToLower(cmem)
 	for _, field := range fields {
