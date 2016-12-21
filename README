@@ -1,5 +1,9 @@
 Check that a JSON object's keys correspond to a struct's exported members or JSON tags.
 
+ANNOUNCEMENTS
+
+2016.11.18 - MissingJSONKeys() lists all struct members that won't be set by JSON object.
+
 USAGE
 
 https://godoc.org/github.com/clbanning/checkjson
