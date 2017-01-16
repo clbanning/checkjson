@@ -202,7 +202,7 @@ func ResolveJSONError(data []byte, err error) error {
 			switch data[i] {
 			case ':':
 				getKey = true
-			case '\n', '{', '[', ',':
+			case '\n', '{', '[', ',', ' ':
 				if getKey {
 					goto done
 				}
