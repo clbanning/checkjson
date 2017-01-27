@@ -23,7 +23,7 @@ import (
 //	
 //	Code:
 //		j, _ := ReadJSONFile("test.json")
-//		fmt.Println(string(j[0]) // prints: {"author":"B. Dylan","title":"Ballad of a Thin Man"}
+//		fmt.Println(string(j[0])) // prints: {"author":"B. Dylan","title":"Ballad of a Thin Man"}
 //
 func ReadJSONFile(file string) ([][]byte, error) {
 	fi, serr := os.Stat(file)
