@@ -17,7 +17,7 @@ import (
 //	File "test.json":
 //		This file contains some test data for ReadJSONFile ...
 //		{
-//		 . "author": "B. Dylan",
+//		  "author": "B. Dylan",
 //		  "title" : "Ballad of a Thin Man"  # one of my favorites
 //		}
 //	
