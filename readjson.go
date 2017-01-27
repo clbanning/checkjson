@@ -1,0 +1,137 @@
+// Copyright © 2017 C. L. Banning, All rights reserved.
+// See LICENSE file for information.
+// Utility function taken from tamgroup/rwjson package. ©2016 TAM Group, Inc.
+
+package checkjson
+
+import (
+	"bytes"
+	"errors"
+	"fmt"
+	"os"
+)
+
+// ReadJsonFile returns an array of the JSON objects in 'file'. The file can
+// comments outside of the JSON objects as well as comments embedded in the
+// JSON objects if preceeded by the number, '#', symbol.
+//	File "test.json":
+//		This file contains some test data for ReadJSONFile ...
+//		{
+//		 . "author": "B. Dylan",
+//		  "title" : "Ballad of a Thin Man"  # one of my favorites
+//		}
+//	
+//	Code:
+//		j, _ := ReadJSONFile("test.json")
+//		fmt.Println(string(j[0]) // prints: {"author":"B. Dylan","title":"Ballad of a Thin Man"}
+//
+func ReadJSONFile(file string) ([][]byte, error) {
+	fi, serr := os.Stat(file)
+	if serr != nil {
+		return nil, errors.New("ERROR: can't locate file - " + file)
+	}
+	if m := fi.Mode(); m == os.ModeSymlink {
+		return nil, errors.New("ERROR: can't edit a symbolic link - " + file)
+	}
+	fd, ferr := os.Open(file)
+	if ferr != nil {
+		return nil, errors.New("ERROR opening file - " + file)
+	}
+	defer fd.Close()
+
+	content := make([]byte, fi.Size())
+	if i, ierr := fd.Read(content); ierr != nil || int64(i) != fi.Size() {
+		return nil, errors.New("ERROR: file read failure - " + file)
+	}
+
+	buf := bytes.NewBuffer(content)
+	a := make([][]byte, 0)
+	n := 1
+	for {
+		b, err := getJsonStrFromBuffer(buf)
+		if err != nil {
+			return a, fmt.Errorf("object #: %d - %s", n, err.Error())
+		}
+		if len(b) == 0 {
+			break
+		}
+		a = append(a, b)
+		n++
+	}
+	return a, nil
+}
+
+/* for buf created by file reads, have to handle Ctrl-characters ... strip them out
+   these are the ones that GO handles directly, while some are unlikely, just handle them all!
+	\a   U+0007 alert or bell
+	\b   U+0008 backspace
+	\f   U+000C form feed
+	\n   U+000A line feed or newline
+	\r   U+000D carriage return
+	\t   U+0009 horizontal tab
+	\v   U+000b vertical tab
+*/
+func getJsonStrFromBuffer(buf *bytes.Buffer) ([]byte, error) {
+	var braces bool
+	var braceCnt int
+	var literal bool
+	var comment bool
+	var bufOK error
+	result := make([]byte, 0)
+	b := make([]byte, 1)
+
+	for {
+		b[0], bufOK = buf.ReadByte()
+		if bufOK != nil {
+			break
+		}
+		switch b[0] {
+		case '{':
+			braceCnt++
+			if !braces {
+				braces = true
+			}
+		case '}':
+			if braces {
+				braceCnt--
+			}
+		case '"':
+			if braces {
+				if !literal {
+					literal = true
+				} else {
+					literal = false
+				}
+			}
+		case '#':
+			// rest of line is a comment
+			if !literal && braces {
+				comment = true
+			}
+		case '\n':
+			if comment {
+				comment = false
+			}
+			continue
+		default:
+			if !literal && braces {
+				// \n is redundant, but leave it for completeness.
+				if i := bytes.IndexAny(b, " \a\b\f\n\r\t\v"); i >= 0 {
+					continue
+				}
+			}
+		}
+		if braces && !comment {
+			// create/append string for return. result is initially ""
+			result = append(result, b[0])
+			if braceCnt == 0 {
+				return result, nil
+			}
+		}
+	}
+	if braceCnt != 0 {
+		return result, fmt.Errorf("EOF with unmatched braces: %s", result)
+	}
+
+	return result, nil // EOF, bufOK == nil
+}

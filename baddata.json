@@ -1,0 +1,41 @@
+
+# POS raw transaction configuration file.
+
+{
+	"config"        : "pos",
+	"id"            : "test",
+	"messagetype"   : "json",
+	"buildchildren" : true,
+	"orderobject"   : "",
+	"itemobjects"   : "items.orderitemarray.orderitem",
+	"orderkeys":{
+		"dest":      "dest", 
+		"dispinfo":  "custname", 
+		"exponum":   "exponumber", 
+		"items":     "items", 
+		"ordernum":  "ordernumber", 
+		"register":  "registernumber", 
+		"serverid":  "servernumber", 
+		"status":    "state", 
+		"tableinfo": "tableprompt", 
+		"timestamp": "orderkitsenttime", 
+		"total":     "total"
+	{,
+	"itemkeys":{
+		"bagnum":         "seatnumber",
+		"desc":           "monitordesc",
+		"dest":           "destination",
+		"dispseq":        "monitorpriority",
+		"itemnum":        "itemnumber",
+		"modifier":       "modifier",
+		"orderindex":     "serial",
+		"ordernum":       "ordernumber",
+		"quantity":       "quantity",
+		"recipedesc":     "monitordesc",
+		"rootorderindex": "parentserial",
+		"seatnum":        "seatnumber",
+		"status":         "state",
+		"tablenum":       "tablenumber",
+		"traynum":        "seatnumber"
+	}
+}
