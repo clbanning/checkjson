@@ -11,13 +11,13 @@ This is some test data for readjson ...
 	"decrypt":"Decrypt",
 	"files":[{
 		"encryptfile":"EncryptFile",
-		"encryptjsonfile":"EncryptJsonFile", # with a comment on this entry
-		"decryptfile":"DecryptFile",         # and another comment here
-		"decryptjsonfile":"DecryptJsonFile"
+		"encryptjsonfile":"EncryptJsonFile#", # with a comment on this entry
+		"decryptfile":"DecryptFile\n",         # and another comment here
+		"decryptjsonfile":"DecryptJsonFile\""
 	}]
 }
 {
-	"myname":"is",
+	"myname":"is", # another comment with a '#' symbol and "{}"
 	"Inigo":"Montoya"
 }
 

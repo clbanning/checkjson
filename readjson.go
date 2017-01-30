@@ -75,6 +75,8 @@ func getJSONObject(buf *bytes.Buffer) ([]byte, error) {
 	var literal bool
 	var comment bool
 	var bufOK error
+	var lastB byte
+
 	result := make([]byte, 0)
 	b := make([]byte, 1)
 
@@ -83,49 +85,54 @@ func getJSONObject(buf *bytes.Buffer) ([]byte, error) {
 		if bufOK != nil {
 			break
 		}
+		// see if we're outside a JSON object
+		if !braces && b[0] != '{' {
+			continue
+		}
+		// see if we're scanning a comment
+		if comment && b[0] != '\n' {
+			continue
+		}
 		switch b[0] {
-		case '{':
-			braceCnt++
-			if !braces {
-				braces = true
-			}
-		case '}':
-			if braces {
-				braceCnt--
-			}
-		case '"':
-			if braces {
-				if !literal {
-					literal = true
-				} else {
-					literal = false
-				}
-			}
 		case '#':
-			// rest of line is a comment
-			if !literal && braces {
+			// rest of line is a comment?
+			if !literal {
 				comment = true
+				continue
 			}
 		case '\n':
 			if comment {
 				comment = false
+				continue
 			}
-			continue
-		default:
-			if !literal && braces {
-				// \n is redundant, but leave it for completeness.
-				if i := bytes.IndexAny(b, " \a\b\f\n\r\t\v"); i >= 0 {
-					continue
+		case '{':
+			if !literal {
+				braceCnt++
+				if !braces {
+					braces = true
 				}
 			}
-		}
-		if braces && !comment {
-			// create/append string for return. result is initially ""
-			result = append(result, b[0])
-			if braceCnt == 0 {
-				return result, nil
+		case '}':
+			if !literal {
+				braceCnt--
+			}
+		case '"':
+			if !literal {
+				literal = true
+			} else if lastB != '\\' {
+				literal = false
 			}
 		}
+		if !literal {
+			if i := bytes.IndexAny(b, " \a\b\f\n\r\t\v"); i >= 0 {
+				continue
+			}
+		}
+		result = append(result, b[0])
+		if braceCnt == 0 {
+			return result, nil
+		}
+		lastB = b[0]
 	}
 	if braceCnt != 0 {
 		return result, fmt.Errorf("EOF with unmatched braces: %s", result)

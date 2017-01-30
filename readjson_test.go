@@ -10,7 +10,7 @@ var data = []string{
 `{"test":"data"}`,
 `{"test2":"2","again":"3","and more":"5"}`,
 `{"test3":[{"sub1":"s1"},{"sub2":"s2","sub3":"s3","3":[{"here":"again"}]}],"some":"more","sentence":"Now is the time for all good men ..."}`,
-`{"encrypt":"Encrypt","decrypt":"Decrypt","files":[{"encryptfile":"EncryptFile","encryptjsonfile":"EncryptJsonFile","decryptfile":"DecryptFile","decryptjsonfile":"DecryptJsonFile"}]}`,
+`{"encrypt":"Encrypt","decrypt":"Decrypt","files":[{"encryptfile":"EncryptFile","encryptjsonfile":"EncryptJsonFile#","decryptfile":"DecryptFile\n","decryptjsonfile":"DecryptJsonFile\""}]}`,
 `{"myname":"is","Inigo":"Montoya"}`,
 `{"key":"value","key2":{"key3":"value2","key4":"value4"}}`,
 }
