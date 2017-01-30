@@ -6,7 +6,6 @@ package checkjson
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 )
@@ -20,28 +19,27 @@ import (
 //		  "author": "B. Dylan",
 //		  "title" : "Ballad of a Thin Man"  # one of my favorites
 //		}
-//	
+//
 //	Code:
 //		j, _ := ReadJSONFile("test.json")
 //		fmt.Println(string(j[0])) // prints: {"author":"B. Dylan","title":"Ballad of a Thin Man"}
 //
 func ReadJSONFile(file string) ([][]byte, error) {
-	fi, serr := os.Stat(file)
-	if serr != nil {
-		return nil, errors.New("ERROR: can't locate file - " + file)
-	}
-	if m := fi.Mode(); m == os.ModeSymlink {
-		return nil, errors.New("ERROR: can't edit a symbolic link - " + file)
-	}
-	fd, ferr := os.Open(file)
-	if ferr != nil {
-		return nil, errors.New("ERROR opening file - " + file)
+	fd, err := os.Open(file)
+	if err != nil {
+		return nil, fmt.Errorf("err, opening file %s: %s", file, err.Error())
 	}
 	defer fd.Close()
 
+	fi, err := fd.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("err, Stat for %s: %s", file, err.Error())
+	}
+
+	// consume the whole file
 	content := make([]byte, fi.Size())
-	if i, ierr := fd.Read(content); ierr != nil || int64(i) != fi.Size() {
-		return nil, errors.New("ERROR: file read failure - " + file)
+	if i, err := fd.Read(content); err != nil || int64(i) != fi.Size() {
+		return nil, fmt.Errorf("err, reading %s: %s", file, err.Error())
 	}
 
 	buf := bytes.NewBuffer(content)
