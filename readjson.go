@@ -48,7 +48,7 @@ func ReadJSONFile(file string) ([][]byte, error) {
 	a := make([][]byte, 0)
 	n := 1
 	for {
-		b, err := getJsonStrFromBuffer(buf)
+		b, err := getJSONObject(buf)
 		if err != nil {
 			return a, fmt.Errorf("object #: %d - %s", n, err.Error())
 		}
@@ -71,7 +71,7 @@ func ReadJSONFile(file string) ([][]byte, error) {
 	\t   U+0009 horizontal tab
 	\v   U+000b vertical tab
 */
-func getJsonStrFromBuffer(buf *bytes.Buffer) ([]byte, error) {
+func getJSONObject(buf *bytes.Buffer) ([]byte, error) {
 	var braces bool
 	var braceCnt int
 	var literal bool
