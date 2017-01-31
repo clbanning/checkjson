@@ -74,15 +74,16 @@ func getJSONObject(buf *bytes.Buffer) ([]byte, error) {
 	var braceCnt int
 	var literal bool
 	var comment bool
-	var bufOK error
+	var err error
 	var lastB byte
 
 	result := make([]byte, 0)
 	b := make([]byte, 1)
 
 	for {
-		b[0], bufOK = buf.ReadByte()
-		if bufOK != nil {
+		b[0], err = buf.ReadByte()
+		if err != nil {
+			// the only error returned is io.EOF
 			break
 		}
 		// see if we're outside a JSON object
@@ -138,5 +139,5 @@ func getJSONObject(buf *bytes.Buffer) ([]byte, error) {
 		return result, fmt.Errorf("EOF with unmatched braces: %s", result)
 	}
 
-	return result, nil // EOF, bufOK == nil
+	return result, nil // io.EOF
 }
