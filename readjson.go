@@ -1,3 +1,4 @@
+// readjson.go - JSON file reading utilities
 // Copyright © 2017 C. L. Banning, All rights reserved.
 // See LICENSE file for information.
 // Utility function taken from tamgroup/rwjson package. ©2016 TAM Group, Inc.
