@@ -11,7 +11,7 @@ import (
 	"os"
 )
 
-// ReadJsonFile returns an array of the JSON objects in 'file'. The file can
+// ReadJSONFile returns an array of the JSON objects in 'file'. The file can
 // comments outside of the JSON objects as well as comments embedded in the
 // JSON objects if preceeded by the number, '#', symbol.
 //	File "test.json":

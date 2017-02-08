@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// UnknownJSONKeys() returns a list of the JSON object keys that will not
+// UnknownJSONKeys returns a list of the JSON object keys that will not
 // be decoded to a member of 'val', which is of type struct.  For nested
 // JSON objects the keys are reported using dot-notation.
 func UnknownJSONKeys(b []byte, val interface{}) ([]string, error) {

@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// The checkjson package identifies JSON object's keys that cannot be decoded
-// to a member of a struct using the "encoding/json" package.
+// Package checkjson provides functions for checking JSON object keys against
+// struct member names/tags to see if they will decode using encoding/json package.
 //
 // There are several options: Validate returns an error on the first key:value pair
 // that won't decode; UnknownJSONKeys returns a slice of all the keys that won't decode
@@ -144,7 +144,7 @@ func checkFields(mv interface{}, val reflect.Value) error {
 	mm, ok := mv.(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("JSON object does not have k:v pairs for member: %s",
-			typ.Name)
+			typ.Name())
 	}
 
 	// 4. Build the map of struct field name:value

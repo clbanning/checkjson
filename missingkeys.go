@@ -106,7 +106,7 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) e
 	mm, ok := mv.(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("JSON object does not have k:v pairs for member: %s",
-			typ.Name)
+			typ.Name())
 	}
 	// 3c. Coerce keys to lower case.
 	mkeys := make(map[string]interface{}, len(mm))
