@@ -2,7 +2,8 @@ Check that a JSON object's keys correspond to a struct's exported members or JSO
 
 ANNOUNCEMENTS
 
-2016.11.18 - MissingJSONKeys() lists all struct members that won't be set by JSON object.
+2017.02.08 - UnknownJSONKeys lists all JSON object keys that won't be decoded. 
+2016.11.18 - MissingJSONKeys lists all struct members that won't be set by JSON object.
 
 USAGE
 
@@ -11,7 +12,7 @@ https://godoc.org/github.com/clbanning/checkjson
 EXAMPLE
 
 	import "github.com/clbanning/checkjson"
-
+	...
 	type Home struct {
 		Addr string
 		Port int
