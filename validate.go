@@ -8,7 +8,7 @@
 //
 // There are several options: Validate returns an error on the first key:value pair
 // that won't decode; UnknownJSONKeys returns a slice of all the keys that won't decode
-// using dot-notation for nexted JSON object keys.  A complementary function
+// using dot-notation for nested JSON object keys.  A complementary function
 // MissingJSONKeys provides a slice of struct members that won't be set by the JSON 
 // object using dot-notation for nested struct members.  (See test cases for examples.)
 /*
