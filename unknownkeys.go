@@ -10,6 +10,8 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 // UnknownJSONKeys returns a list of the JSON object keys that will not
@@ -61,7 +63,6 @@ func checkAllFields(mv interface{}, val reflect.Value, s *[]string, key string) 
 		sval := reflect.New(tval)
 		slice, ok := mv.([]interface{})
 		if !ok {
-			// return fmt.Errorf("JSON value not an array")
 			*s = append(*s, key)
 			return nil
 		}
@@ -69,9 +70,6 @@ func checkAllFields(mv interface{}, val reflect.Value, s *[]string, key string) 
 		//      This forces all of them to be regular and w/o typos in key labels.
 		for n, sl := range slice {
 			_ = checkAllFields(sl, sval, s, key+"."+strconv.Itoa(n+1))
-			// if err := checkAllFields(sl, sval, s, key+strconv.Itoa(n+1)); err != nil {
-			// 	return fmt.Errorf("[array element #%d] %s", n+1, err.Error())
-			// }
 		}
 		return nil // done with reflect.Slice value
 	}
@@ -85,10 +83,6 @@ func checkAllFields(mv interface{}, val reflect.Value, s *[]string, key string) 
 	if !ok {
 		*s = append(*s, key)
 	}
-	// if !ok {
-	// 	return fmt.Errorf("JSON object does not have k:v pairs for member: %s",
-	// 		typ.Name)
-	// }
 
 	// 4. Build the map of struct field name:value
 	//    We make every key (field) label look like an exported label - "Fieldname".
@@ -117,7 +111,7 @@ func checkAllFields(mv interface{}, val reflect.Value, s *[]string, key string) 
 	for k, m := range mm {
 		lk := strings.ToLower(k)
 		for _, sk := range skipkeys {
-			if lk == sk {
+			if key+"."+lk == sk {
 				goto next
 			}
 		}
@@ -125,17 +119,12 @@ func checkAllFields(mv interface{}, val reflect.Value, s *[]string, key string) 
 		if !ok {
 			*s = append(*s, key+"."+lk)
 			return nil
-			// return fmt.Errorf("no member for JSON key: %s", k)
 		}
 		if len(spec.tag) > 0 && spec.tag != k { // JSON key doesn't match Field tag
-			// return fmt.Errorf("key: %s -  does not match tag: %s", k, spec.tag)
 			*s = append(*s, key+"["+spec.tag+"]") // include tag in brackets
 			return nil
 		}
 		_ = checkAllFields(m, spec.val, s, key+"."+lk)
-		// if err := checkFields(m, spec.val); err != nil { // could be nested structs
-		// 	return fmt.Errorf("checking subkeys of JSON key: %s - %s", k, err.Error())
-		// }
 	next:
 	}
 
