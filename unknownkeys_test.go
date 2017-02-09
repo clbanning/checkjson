@@ -64,7 +64,7 @@ func TestUnknownKeysSkip(t *testing.T) {
 
 	data := []byte(`{"ok":true, "why":{"maybe":true,"maybenot":false}, "not":"I don't know"}`)
 	SetKeysToIgnore("test.why.maybenot", "test.not")
-	defer SetKeysToIgnore()
+	defer SetKeysToIgnore("config")
 	type test2 struct {
 		Maybe bool
 	}
