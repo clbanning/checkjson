@@ -30,11 +30,6 @@ func UnknownJSONKeys(b []byte, val interface{}) ([]string, error) {
 func checkAllFields(mv interface{}, val reflect.Value, s *[]string, key string) error {
 	var tkey string
 
-	// get the name when initially called
-	// if key == "" {
-	// 	key = +val.Type().Name()
-	// }
-
 	// 1. Convert any pointer value.
 	if val.Kind() == reflect.Ptr {
 		val = reflect.Indirect(val) // convert ptr to struct
@@ -122,13 +117,13 @@ func checkAllFields(mv interface{}, val reflect.Value, s *[]string, key string) 
 				goto next
 			}
 		}
-		spec, ok = fields[strings.Title(lk)]
 		// used for !ok and recursion on checkAllFields
 		if key == "" {
 			tkey = lk
 		} else {
 			tkey = key + "." + lk
 		}
+		spec, ok = fields[strings.Title(lk)]
 		if !ok {
 			*s = append(*s, tkey)
 			return nil
