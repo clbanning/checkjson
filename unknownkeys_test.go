@@ -9,7 +9,7 @@ func TestUnknownKeys(t *testing.T) {
 	fmt.Println("===================== TestUnknownKeys ...")
 
 	data := []byte(`{"ok":true, "why":{"maybe":true,"maybenot":false}, "not":"I don't know"}`)
-	check := map[string]bool{"test.why.maybenot":true, "test.not":true}
+	check := map[string]bool{"why.maybenot":true, "not":true}
 	type test2 struct {
 		Maybe bool
 	}
@@ -36,7 +36,7 @@ func TestUnknownKeysTag(t *testing.T) {
 	fmt.Println("===================== TestUnknownKeysTag ...")
 
 	data := []byte(`{"ok":true, "why":{"maybe":true,"maybenot":false}, "not":"I don't know"}`)
-	check := map[string]bool{"test.why.maybenot":true, "test.not":true}
+	check := map[string]bool{"why.maybenot":true, "not":true}
 	type test2 struct {
 		Val bool `json:"maybe"`
 	}
@@ -63,7 +63,7 @@ func TestUnknownKeysSkip(t *testing.T) {
 	fmt.Println("===================== TestUnknownKeysSkip ...")
 
 	data := []byte(`{"ok":true, "why":{"maybe":true,"maybenot":false}, "not":"I don't know"}`)
-	SetKeysToIgnore("test.why.maybenot", "test.not")
+	SetKeysToIgnore("why.maybenot", "not")
 	defer SetKeysToIgnore("config")
 	type test2 struct {
 		Maybe bool

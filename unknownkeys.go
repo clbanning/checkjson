@@ -28,10 +28,12 @@ func UnknownJSONKeys(b []byte, val interface{}) ([]string, error) {
 }
 
 func checkAllFields(mv interface{}, val reflect.Value, s *[]string, key string) error {
+	var tkey string
+
 	// get the name when initially called
-	if key == "" {
-		key = val.Type().Name()
-	}
+	// if key == "" {
+	// 	key = +val.Type().Name()
+	// }
 
 	// 1. Convert any pointer value.
 	if val.Kind() == reflect.Ptr {
@@ -67,7 +69,12 @@ func checkAllFields(mv interface{}, val reflect.Value, s *[]string, key string) 
 		// 2.1. Check members of JSON array.
 		//      This forces all of them to be regular and w/o typos in key labels.
 		for n, sl := range slice {
-			_ = checkAllFields(sl, sval, s, key+"."+strconv.Itoa(n+1))
+			if key == "" {
+				tkey = strconv.Itoa(n + 1)
+			} else {
+				tkey = key + "." + strconv.Itoa(n+1)
+			}
+			_ = checkAllFields(sl, sval, s, tkey)
 		}
 		return nil // done with reflect.Slice value
 	}
@@ -109,20 +116,33 @@ func checkAllFields(mv interface{}, val reflect.Value, s *[]string, key string) 
 	for k, m := range mm {
 		lk := strings.ToLower(k)
 		for _, sk := range skipkeys {
-			if key+"."+lk == sk {
+			if key == "" && lk == sk {
+				goto next
+			} else if key != "" && key+"."+lk == sk {
 				goto next
 			}
 		}
 		spec, ok = fields[strings.Title(lk)]
+		// used for !ok and recursion on checkAllFields
+		if key == "" {
+			tkey = lk
+		} else {
+			tkey = key + "." + lk
+		}
 		if !ok {
-			*s = append(*s, key+"."+lk)
+			*s = append(*s, tkey)
 			return nil
 		}
 		if len(spec.tag) > 0 && spec.tag != k { // JSON key doesn't match Field tag
-			*s = append(*s, key+"["+spec.tag+"]") // include tag in brackets
+			if k == "" {
+				tkey = "[" + spec.tag + "]"
+			} else {
+				tkey = key + ".[" + spec.tag + "]"
+			}
+			*s = append(*s, tkey) // include tag in brackets
 			return nil
 		}
-		_ = checkAllFields(m, spec.val, s, key+"."+lk)
+		_ = checkAllFields(m, spec.val, s, tkey)
 	next:
 	}
 
