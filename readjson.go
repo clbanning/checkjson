@@ -8,6 +8,7 @@ package checkjson
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -60,7 +61,21 @@ func ReadJSONFile(file string) ([][]byte, error) {
 	return a, nil
 }
 
-/* for buf created by file reads, have to handle Ctrl-characters ... strip them out
+// ReadJSONReader returns the next JSON object from an io.Reader; it returns io.EOF
+// if the Reader terminates. (See ReadJSONFile for notes on handling of embedded comments in
+// JSON object.)
+func ReadJSONReader(r io.Reader) ([]byte, error) {
+	// We need to verify that the io.Reader implements io.ByteReader -
+	// bufio.Buffer does, but os.File doesn't.  If it doesn't we wrap
+	// it in a local io.ByteReader/Reader.
+	buf, ok := r.(io.ByteReader)
+	if !ok {
+		buf = myByteReader(r) // see code at EOF
+	}
+	return getJSONObject(buf)
+}
+
+/* For buf created by file reads, have to handle Ctrl-characters ... strip them out
    these are the ones that GO handles directly, while some are unlikely, just handle them all!
 	\a   U+0007 alert or bell
 	\b   U+0008 backspace
@@ -70,7 +85,7 @@ func ReadJSONFile(file string) ([][]byte, error) {
 	\t   U+0009 horizontal tab
 	\v   U+000b vertical tab
 */
-func getJSONObject(buf *bytes.Buffer) ([]byte, error) {
+func getJSONObject(buf io.ByteReader) ([]byte, error) {
 	var braces bool
 	var braceCnt int
 	var literal bool
@@ -141,4 +156,31 @@ func getJSONObject(buf *bytes.Buffer) ([]byte, error) {
 	}
 
 	return result, nil // io.EOF
+}
+
+// ================ local io.ByteReader wrapper for an io.Reader ...
+// Source: unabasedly appropriated from github.com/clbanning/mxj.
+
+type byteReader struct {
+	r io.Reader
+	b []byte
+}
+
+func myByteReader(r io.Reader) io.ByteReader {
+	b := make([]byte, 1)
+	return &byteReader{r, b}
+}
+
+// need for io.Reader - but we don't use it ...
+func (b *byteReader) Read(p []byte) (int, error) {
+	return 0, nil
+}
+
+func (b *byteReader) ReadByte() (byte, error) {
+	_, err := b.r.Read(b.b)
+	if len(b.b) > 0 {
+		return b.b[0], nil
+	}
+	var c byte
+	return c, err
 }
