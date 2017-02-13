@@ -17,6 +17,24 @@ type skipmems struct {
 	depth int
 }
 
+// Slice of dot-notation struct members that can be missing in JSON object.
+var skipmembers = []skipmems{}
+
+// SetMembersToIgnore creates a list of exported struct member names that should not be checked
+// for as keys in the JSON object.  For hierarchical struct members provide the full path for
+// the member name using dot-notation. Calling SetMembersToIgnore with no arguments -
+// SetMembersToIgnore() - clears the list.
+func SetMembersToIgnore(s ...string) {
+	if len(s) == 0 {
+		skipmembers = skipmembers[:0]
+		return
+	}
+	skipmembers = make([]skipmems, len(s))
+	for i, v := range s {
+		skipmembers[i] = skipmems{strings.ToLower(v), len(strings.Split(v, "."))}
+	}
+}
+
 // Should we ignore "omitempty" struct tags. By default accept tag.
 var omitemptyOK = true
 
@@ -37,24 +55,6 @@ func IgnoreOmitemptyTag(ok ...bool) {
 	omitemptyOK = ok[0]
 }
 
-// Slice of dot-notation struct members that can be missing in JSON object.
-var skipmembers = []skipmems{}
-
-// SetMembersToIgnore creates a list of exported struct member names that should not be checked
-// for as keys in the JSON object.  For hierarchical struct members provide the full path for
-// the member name using dot-notation. Calling SetMembersToIgnore with no arguments -
-// SetMembersToIgnore() - clears the list.
-func SetMembersToIgnore(s ...string) {
-	if len(s) == 0 {
-		skipmembers = skipmembers[:0]
-		return
-	}
-	skipmembers = make([]skipmems, len(s))
-	for i, v := range s {
-		skipmembers[i] = skipmems{strings.ToLower(v), len(strings.Split(v, "."))}
-	}
-}
-
 // MissingJSONKeys returns a list of members of val of struct type  that will NOT be set
 // by unmarshaling the JSON object; rather, they will assume their default
 // values. For nested structs, member labels are the dot-notation hierachical
@@ -63,7 +63,7 @@ func SetMembersToIgnore(s ...string) {
 // (NOTE: JSON object keys are treated as case insensitive, i.e., there
 // is no distiction between "key":"value" and "Key":"value".)
 //
-// By default keys in the JSON object that are associated with struct members that 
+// By default keys in the JSON object that are associated with struct members that
 // have JSON tags "-" and "omitempty" are not included in the returned slice.
 // IgnoreOmitemptyTag(false) can be called to override the handling of "omitempty"
 // tags - this might be useful if you want to find the "omitempty" members that
@@ -151,12 +151,12 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) e
 	}
 	fieldCnt := val.NumField()
 	fields := make([]*fieldSpec, 0) // use a list so members are in sequence
+	var tag string
+	var oempty bool
 	for i := 0; i < fieldCnt; i++ {
 		if len(typ.Field(i).PkgPath) > 0 {
 			continue // field is NOT exported
 		}
-		var tag string
-		var oempty bool
 		t := typ.Field(i).Tag.Get("json")
 		tags := strings.Split(t, ",")
 		tag = tags[0]
