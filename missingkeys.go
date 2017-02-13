@@ -149,11 +149,10 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) e
 		tag       string
 		omitempty bool
 	}
-	fieldCnt := val.NumField()
 	fields := make([]*fieldSpec, 0) // use a list so members are in sequence
 	var tag string
 	var oempty bool
-	for i := 0; i < fieldCnt; i++ {
+	for i := 0; i < val.NumField(); i++ {
 		if len(typ.Field(i).PkgPath) > 0 {
 			continue // field is NOT exported
 		}
