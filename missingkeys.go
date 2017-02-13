@@ -1,9 +1,7 @@
-// validate.go - check JSON object against struct definition
+// missingkeys.go - check JSON object against struct definition
 // Copyright © 2016-2017 Charles Banning.  All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-
-// ==== from: https://forum.golangbridge.org/t/how-to-detect-missing-bool-field-in-json-post-data/3861
 
 package checkjson
 
@@ -65,9 +63,11 @@ func SetMembersToIgnore(s ...string) {
 // (NOTE: JSON object keys are treated as case insensitive, i.e., there
 // is no distiction between "key":"value" and "Key":"value".)
 //
-// By default struct members that have JSON tags "-" and "omitempty" are ignored.
+// By default keys in the JSON object that are associated with struct members that 
+// have JSON tags "-" and "omitempty" are not included in the returned slice.
 // IgnoreOmitemptyTag(false) can be called to override the handling of "omitempty"
-// tags.
+// tags - this might be useful if you want to find the "omitempty" members that
+// are not set by the decoding the JSON object..
 func MissingJSONKeys(b []byte, val interface{}) ([]string, error) {
 	s := make([]string, 0)
 	m := make(map[string]interface{})

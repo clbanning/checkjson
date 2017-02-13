@@ -1,4 +1,4 @@
-// validate.go - check JSON object against struct definition
+// unknownkeys.go - check JSON object against struct definition
 // Copyright © 2016-2017 Charles Banning.  All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
