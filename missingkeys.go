@@ -67,7 +67,7 @@ func SetMembersToIgnore(s ...string) {
 // have JSON tags "-" and "omitempty" are not included in the returned slice.
 // IgnoreOmitemptyTag(false) can be called to override the handling of "omitempty"
 // tags - this might be useful if you want to find the "omitempty" members that
-// are not set by the decoding the JSON object..
+// are not set by decoding the JSON object..
 func MissingJSONKeys(b []byte, val interface{}) ([]string, error) {
 	s := make([]string, 0)
 	m := make(map[string]interface{})
