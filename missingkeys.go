@@ -19,12 +19,33 @@ type skipmems struct {
 	depth int
 }
 
+// Should we ignore "omitempty" struct tags. By default accept tag.
+var omitemptyOK = true
+
+// IgnoreOmitemptyTag determines whether a `json:",omitempty"` tag is recognized or
+// not with respect to the JSON object.  By default MissingJSONKeys will not include
+// struct members that are tagged with "omitempty" in the list of missing JSON keys.
+// If the function is toggled or passed the optional argument 'false' then missing
+// JSON keys may include those for struct members with the 'omitempty' JSON tag.
+//
+// Calling IgnoreOmitemptyTag with no arguments toggles the handling on/off.  If
+// the alternative argument is passed, then the argument value determines the
+// "omitempty" handling behavior.
+func IgnoreOmitemptyTag(ok ...bool) {
+	if len(ok) == 0 {
+		omitemptyOK = !omitemptyOK
+		return
+	}
+	omitemptyOK = ok[0]
+}
+
+// Slice of dot-notation struct members that can be missing in JSON object.
 var skipmembers = []skipmems{}
 
 // SetMembersToIgnore creates a list of exported struct member names that should not be checked
 // for as keys in the JSON object.  For hierarchical struct members provide the full path for
 // the member name using dot-notation. Calling SetMembersToIgnore with no arguments -
-// SetMembersToIgnore() - will clear the list.
+// SetMembersToIgnore() - clears the list.
 func SetMembersToIgnore(s ...string) {
 	if len(s) == 0 {
 		skipmembers = skipmembers[:0]
@@ -43,6 +64,10 @@ func SetMembersToIgnore(s ...string) {
 // when scanning the JSON object by declaring them using SetMembersToIgnore().
 // (NOTE: JSON object keys are treated as case insensitive, i.e., there
 // is no distiction between "key":"value" and "Key":"value".)
+//
+// By default struct members that have JSON tags "-" and "omitempty" are ignored.
+// IgnoreOmitemptyTag(false) can be called to override the handling of "omitempty"
+// tags.
 func MissingJSONKeys(b []byte, val interface{}) ([]string, error) {
 	s := make([]string, 0)
 	m := make(map[string]interface{})
@@ -119,21 +144,37 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) e
 	//    If there is a JSON tag it is used instead of the field label, and saved to
 	//    insure that the spec'd tag matches the JSON key exactly.
 	type fieldSpec struct {
-		name string
-		val  reflect.Value
-		tag  string
+		name      string
+		val       reflect.Value
+		tag       string
+		omitempty bool
 	}
 	fieldCnt := val.NumField()
-	fields := make([]*fieldSpec, fieldCnt) // use a list so members are in sequence
+	fields := make([]*fieldSpec, 0) // use a list so members are in sequence
 	for i := 0; i < fieldCnt; i++ {
 		if len(typ.Field(i).PkgPath) > 0 {
 			continue // field is NOT exported
 		}
-		tag := typ.Field(i).Tag.Get("json")
+		var tag string
+		var oempty bool
+		t := typ.Field(i).Tag.Get("json")
+		tags := strings.Split(t, ",")
+		tag = tags[0]
+		// handle ignore member JSON tag, "-"
+		if tag == "-" {
+			continue
+		}
+		// scan rest of tags for "omitempty"
+		for _, v := range tags[1:] {
+			if v == "omitempty" {
+				oempty = true
+				break
+			}
+		}
 		if tag == "" {
-			fields[i] = &fieldSpec{typ.Field(i).Name, val.Field(i), ""}
+			fields = append(fields, &fieldSpec{typ.Field(i).Name, val.Field(i), "", oempty})
 		} else {
-			fields[i] = &fieldSpec{typ.Field(i).Name, val.Field(i), tag}
+			fields = append(fields, &fieldSpec{typ.Field(i).Name, val.Field(i), tag, oempty})
 		}
 	}
 
@@ -166,7 +207,9 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) e
 		} else {
 			v, ok = mkeys[lm]
 		}
-		if !ok {
+		// If map key is missing, then record it
+		// if there's no omitempty tag or we're ignoring  omitempty tag.
+		if !ok && (!field.omitempty || !omitemptyOK) {
 			if len(cmem) > 0 {
 				*s = append(*s, cmem+`.`+field.name)
 			} else {

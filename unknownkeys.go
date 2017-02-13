@@ -12,9 +12,13 @@ import (
 	"strings"
 )
 
-// UnknownJSONKeys returns a list of the JSON object keys that will not
+// UnknownJSONKeys returns a slice of the JSON object keys that will not
 // be decoded to a member of 'val', which is of type struct.  For nested
 // JSON objects the keys are reported using dot-notation.
+//
+// JSON object keys that may correspond with a struct member that is defined
+// with the JSON tag "-" will not be included in the unknown key slice, since 
+// they are valid keys even though they won't be decoded by the Go stdlib.
 func UnknownJSONKeys(b []byte, val interface{}) ([]string, error) {
 	s := make([]string, 0)
 	m := make(map[string]interface{})
@@ -98,7 +102,12 @@ func checkAllFields(mv interface{}, val reflect.Value, s *[]string, key string) 
 		if len(typ.Field(i).PkgPath) > 0 {
 			continue // field is NOT exported
 		}
-		tag := typ.Field(i).Tag.Get("json")
+		t := typ.Field(i).Tag.Get("json")
+		tags := strings.Split(t, ",")
+		tag := tags[0]
+		if tag == "-" {
+			tag = ""
+		}
 		if tag == "" {
 			fields[strings.Title(strings.ToLower(typ.Field(i).Name))] = &fieldSpec{val.Field(i), ""}
 		} else {

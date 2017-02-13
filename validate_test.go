@@ -82,3 +82,19 @@ func TestIgnoreKeys(t *testing.T) {
 	}
 	fmt.Println("err ok:", err.Error())
 }
+
+func TestStructIgnoreTag(t *testing.T) {
+	fmt.Println("===================== TestStructIgnoreTag ...")
+	var err error
+
+	type test struct {
+		Ok     bool
+		Why    string `json:"-"`
+		Whynot string
+	}
+	tv := test{}
+	data := []byte(`{"ok":true,"why":"don't know","whynot":"it's a tag test"}`)
+	if err = Validate(data, tv); err != nil {
+		t.Fatalf(err.Error())
+	}
+}

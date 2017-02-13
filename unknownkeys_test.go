@@ -84,3 +84,30 @@ func TestUnknownKeysSkip(t *testing.T) {
 	}
 }
 
+func TestUnknownKeysIgnoreTag(t *testing.T) {
+	fmt.Println("===================== TestUnknownKeysIgnoreTag ...")
+
+	data := []byte(`{"ok":true, "why":{"maybe":true,"maybenot":false}, "not":"I don't know"}`)
+	check := map[string]bool{"why.maybenot":true, "not":true}
+	type test2 struct {
+		Val bool `json:"maybe"`
+	}
+	type test struct {
+		Ok  bool `json:"-"`
+		Why test2
+	}
+
+	tv := test{}
+	fields, err := UnknownJSONKeys(data, tv)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// fmt.Println(fields)
+
+	for _, v := range fields {
+		if _, ok := check[v]; !ok {
+			t.Fatal("unknown key not in slice:", v)
+		}
+	}
+}
+

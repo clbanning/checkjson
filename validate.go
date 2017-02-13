@@ -70,6 +70,10 @@ var skipkeys = []string{"config"}
 // The arguments are used as the list of keys to ignore and
 // override the default. NOTE: keys are case insensitive - i.e.,
 // "key" == "Key" == "KEY".
+//
+// A JSON object key that corresponds with a struct member that is defined
+// with the JSON tag "-" will not be reported, since it is a valid key for
+// the struct definiton, even if it won't be decoded by the Go stdlib.
 func SetKeysToIgnore(s ...string) {
 	if len(s) == 0 {
 		skipkeys = skipkeys[:0] // remove "config"
@@ -84,6 +88,10 @@ func SetKeysToIgnore(s ...string) {
 // Validate scans a JSON object and returns an error when it encounters
 // a key:value pair that will not decode to a member of the 'val' 
 // of type struct using the "encoding/json" package. 
+//
+// JSON object key that may correspond with a struct member that is defined
+// with the JSON tag "-" will not be reported since it is a valid key even
+// though it won't be decoded by the Go stdlib.
 func Validate(b []byte, val interface{}) error {
 	m := make(map[string]interface{})
 	if err := json.Unmarshal(b, &m); err != nil {
@@ -161,7 +169,14 @@ func checkFields(mv interface{}, val reflect.Value) error {
 		if len(typ.Field(i).PkgPath) > 0 {
 			continue // field is NOT exported
 		}
-		tag := typ.Field(i).Tag.Get("json")
+		var tag string
+		t := typ.Field(i).Tag.Get("json")
+		tags := strings.Split(t, ",")
+		tag = tags[0]
+		// handle ignore member JSON tag, "-"
+		if tag == "-" {
+			tag = ""
+		}
 		if tag == "" {
 			fields[strings.Title(strings.ToLower(typ.Field(i).Name))] = &fieldSpec{val.Field(i), ""}
 		} else {

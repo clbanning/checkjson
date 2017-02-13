@@ -123,6 +123,7 @@ func TestJSONMissingSkipMems(t *testing.T) {
 	tv := test{}
 	data := []byte(`{"ok":true,"more":{"why":"again","another":{"else":"ok"}}}`)
 	SetMembersToIgnore("why", "more.not", "more.another.something")
+	defer SetMembersToIgnore()
 
 	mems, err := MissingJSONKeys(data, tv)
 	if err != nil {
@@ -134,3 +135,57 @@ func TestJSONMissingSkipMems(t *testing.T) {
 	fmt.Println("missing keys:", mems)
 	SetMembersToIgnore() // reset to default
 }
+
+func TestJSONKeysWithIgnoreTags(t *testing.T) {
+	fmt.Println("===================== TestJSONKeysWithIgnoreTag ...")
+
+	type test struct {
+		Ok  bool
+		Why string
+		Whynot string `json:"-"`
+	}
+	tv := test{}
+	data := []byte(`{"ok":true,"why":"it's a test"}`)
+	mems, err := MissingJSONKeys(data, tv)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if len(mems) > 0 {
+		t.Fatalf(fmt.Sprintf("len(mems) == %d >> %v", len(mems), mems))
+	}
+}
+
+func TestJSONKeysWithOmitemptyTags(t *testing.T) {
+	fmt.Println("===================== TestJSONKeysWithmitemptyIgnoreTag ...")
+
+	type test struct {
+		Ok  bool
+		Why string
+		Whynot string `json:",omitempty"`
+	}
+	tv := test{}
+	data := []byte(`{"ok":true,"why":"it's a test"}`)
+
+	IgnoreOmitemptyTag(true)
+	mems, err := MissingJSONKeys(data, tv)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if len(mems) > 0 {
+		t.Fatalf(fmt.Sprintf("len(mems) == %d >> %v", len(mems), mems))
+	}
+
+	IgnoreOmitemptyTag()
+	defer IgnoreOmitemptyTag()
+	mems, err = MissingJSONKeys(data, tv)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if len(mems) != 1 {
+		t.Fatalf(fmt.Sprintf("len(mems) == %d >> %v", len(mems), mems))
+	}
+	if mems[0] != "Whynot" {
+		t.Fatalf("MissingJSONKeys did't get: Whynot")
+	}
+}
+
