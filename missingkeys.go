@@ -73,27 +73,25 @@ func MissingJSONKeys(b []byte, val interface{}) ([]string, error) {
 	if err := json.Unmarshal(b, &m); err != nil {
 		return s, ResolveJSONError(b, err)
 	}
-	if err := checkMembers(m, reflect.ValueOf(val), &s, ""); err != nil {
-		return s, err
-	}
+	checkMembers(m, reflect.ValueOf(val), &s, "")
 	return s, nil
 }
 
 // cmem is the parent struct member for nested structs
-func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) error {
+func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 	// 1. Convert any pointer value.
 	if val.Kind() == reflect.Ptr {
 		val = reflect.Indirect(val) // convert ptr to struc
 	}
 	// zero Value?
 	if !val.IsValid() {
-		return nil
+		return
 	}
 	typ := val.Type()
 
 	// json.RawMessage is a []byte/[]uint8 and has Kind() == reflect.Slice
 	if typ.Name() == "RawMessage" {
-		return nil
+		return
 	}
 
 	// 2. If its a slice then 'mv' should hold a []interface{} value.
@@ -109,30 +107,28 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) e
 		sval := reflect.New(tval)
 		slice, ok := mv.([]interface{})
 		if !ok {
-			// return fmt.Errorf("JSON value not an array")
-			slice = []interface{}{mv}
+			// encodiong/json must have a JSON array value to decode
+			// unlike encoding/xml which will decode a list of elements
+			// to a singleton or vise-versa.
+			*s = append(*s, typ.Name())
+			return
 		}
 		// 2.1. Check members of JSON array.
 		//      This forces all of them to be regular and w/o typos in key labels.
 		for _, sl := range slice {
 			// cmem is the member name for the slice - []<T> - value
-			// if err := checkMembers(sl, sval, s, cmem); err != nil {
-			// 	return fmt.Errorf("[array element #%d] %s", n+1, err.Error())
-			// }
-			_ = checkMembers(sl, sval, s, cmem)
+			checkMembers(sl, sval, s, cmem)
 		}
-		return nil // done with reflect.Slice value
+		return // done with reflect.Slice value
 	}
 
 	// 3a. Ignore anything that's not a struct.
 	if typ.Kind() != reflect.Struct {
-		return nil // just ignore it - don't look for k:v pairs
+		return // just ignore it - don't look for k:v pairs
 	}
 	// 3b. map value must represent k:v pairs
 	mm, ok := mv.(map[string]interface{})
 	if !ok {
-		// return fmt.Errorf("JSON object does not have k:v pairs for member: %s",
-		// 	typ.Name())
 		*s = append(*s, typ.Name())
 	}
 	// 3c. Coerce keys to lower case.
@@ -219,15 +215,12 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) e
 			goto next // don't drill down further; no key in JSON object
 		}
 		if len(cmem) > 0 {
-			_ = checkMembers(v, field.val, s, cmem+`.`+field.name)
+			checkMembers(v, field.val, s, cmem+`.`+field.name)
 		} else {
-			_ = checkMembers(v, field.val, s, field.name)
+			checkMembers(v, field.val, s, field.name)
 		}
-		// if err != nil { // could be nested structs
-		// 	return fmt.Errorf("checking submembers of member: %s - %s", cmem, err.Error())
-		// }
 	next:
 	}
 
-	return nil
+	return
 }
