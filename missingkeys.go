@@ -221,6 +221,4 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 		}
 	next:
 	}
-
-	return
 }
