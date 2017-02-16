@@ -7,7 +7,6 @@ package checkjson
 
 import (
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"strings"
 )
@@ -110,15 +109,17 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) e
 		sval := reflect.New(tval)
 		slice, ok := mv.([]interface{})
 		if !ok {
-			return fmt.Errorf("JSON value not an array")
+			// return fmt.Errorf("JSON value not an array")
+			slice = []interface{}{mv}
 		}
 		// 2.1. Check members of JSON array.
 		//      This forces all of them to be regular and w/o typos in key labels.
-		for n, sl := range slice {
+		for _, sl := range slice {
 			// cmem is the member name for the slice - []<T> - value
-			if err := checkMembers(sl, sval, s, cmem); err != nil {
-				return fmt.Errorf("[array element #%d] %s", n+1, err.Error())
-			}
+			// if err := checkMembers(sl, sval, s, cmem); err != nil {
+			// 	return fmt.Errorf("[array element #%d] %s", n+1, err.Error())
+			// }
+			_ = checkMembers(sl, sval, s, cmem)
 		}
 		return nil // done with reflect.Slice value
 	}
@@ -130,8 +131,9 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) e
 	// 3b. map value must represent k:v pairs
 	mm, ok := mv.(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("JSON object does not have k:v pairs for member: %s",
-			typ.Name())
+		// return fmt.Errorf("JSON object does not have k:v pairs for member: %s",
+		// 	typ.Name())
+		*s = append(*s, typ.Name())
 	}
 	// 3c. Coerce keys to lower case.
 	mkeys := make(map[string]interface{}, len(mm))
@@ -180,7 +182,7 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) e
 	// 5. check that field names/tags have corresponding map key
 	// var ok bool
 	var v interface{}
-	var err error
+	// var err error
 	cmemdepth := 1
 	if len(cmem) > 0 {
 		cmemdepth = len(strings.Split(cmem, ".")) + 1 // struct hierarchy
@@ -217,13 +219,13 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) e
 			goto next // don't drill down further; no key in JSON object
 		}
 		if len(cmem) > 0 {
-			err = checkMembers(v, field.val, s, cmem+`.`+field.name)
+			_ = checkMembers(v, field.val, s, cmem+`.`+field.name)
 		} else {
-			err = checkMembers(v, field.val, s, field.name)
+			_ = checkMembers(v, field.val, s, field.name)
 		}
-		if err != nil { // could be nested structs
-			return fmt.Errorf("checking submembers of member: %s - %s", cmem, err.Error())
-		}
+		// if err != nil { // could be nested structs
+		// 	return fmt.Errorf("checking submembers of member: %s - %s", cmem, err.Error())
+		// }
 	next:
 	}
 
