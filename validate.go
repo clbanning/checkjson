@@ -11,46 +11,6 @@
 // using dot-notation for nested JSON object keys.  A complementary function
 // MissingJSONKeys provides a slice of struct members that won't be set by the JSON 
 // object using dot-notation for nested struct members.  (See test cases for examples.)
-/*
-EXAMPLE
-
-	import "github.com/clbanning/checkjson"
-	...
-	type Home struct {
-		Addr string
-		Port int
-	}
-
-	type config struct {
-		Id       string
-		Address  *Home `json:"addr"`
-		Failover []*Home
-		Log      bool
-	}
-
-	configData := []byte(`
-		{
-			"id":"example",
-			"addr":{
-				"addr":"127.0.0.1",
-				"port":12345
-			},
-			"failover":[{
-					"addr":"127.0.0.1",
-					"port":12346
-				},{
-					"add":"24.33.6.1",
-					"port":80
-				}],
-			"log":true
-		}`)
-
-	c := new(config)
-	if err := checkjson.Validate(configData, c); err != nil {
-		// handle error:
-		// checking subkeys of JSON key: failover - [array element #2] no member for JSON key: add
-	}
-*/
 package checkjson
 
 import (
