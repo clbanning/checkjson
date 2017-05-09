@@ -1,16 +1,16 @@
 // validate.go - check JSON object against struct definition
-// Copyright © 2016 Charles Banning.  All rights reserved.
+// Copyright © 2016, 2017 Charles Banning.  All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 // Package checkjson provides functions for checking JSON object keys against
-// struct member names/tags to see if they will decode using encoding/json package.
+// struct member names/tags to see if they will be decoded using encoding/json package.
 //
 // There are several options: Validate returns an error on the first key:value pair
-// that won't decode; UnknownJSONKeys returns a slice of all the keys that won't decode
-// using dot-notation for nested JSON object keys.  A complementary function
-// MissingJSONKeys provides a slice of struct members that won't be set by the JSON 
-// object using dot-notation for nested struct members.  (See test cases for examples.)
+// that won't decode, and UnknownJSONKeys returns a slice of all the keys that won' be decoded.
+// 
+// A complementary function MissingJSONKeys provides a slice of struct members that won't
+// be set by the JSON object using encoding/json.
 package checkjson
 
 import (

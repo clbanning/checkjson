@@ -19,3 +19,8 @@ result in unexpected initialization errors or the failure to override defaults.
 The checkjson.Validate() function identifies JSON object keys that cannot be decoded 
 to a member of the struct using the "encoding/json" package.
 
+RELATED
+
+There is a similar package for validating XML tags against structs in 
+https://github.com/clbanning/checkxml.
+
