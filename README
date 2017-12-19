@@ -32,10 +32,10 @@ https://godoc.org/github.com/clbanning/checkjson
 	}
 
 	e := new(elem)
-	result, _ := MissingJSONTags([]byte(data), e)
+	result, _ := MissingJSONKeys([]byte(data), e)
 	// result: [elem2.another elem3]
 
-	result, _ = UnknownJSONTags([]byte(data), e)
+	result, _ = UnknownJSONKeys([]byte(data), e)
 	// result: [elem2.notes elem4]
 
 MOTIVATION
