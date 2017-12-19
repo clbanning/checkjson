@@ -151,6 +151,8 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 	var tag string
 	var oempty bool
 	for i := 0; i < val.NumField(); i++ {
+		tag = ""
+		oempty = false
 		if len(typ.Field(i).PkgPath) > 0 {
 			continue // field is NOT exported
 		}
@@ -184,6 +186,7 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 		cmemdepth = len(strings.Split(cmem, ".")) + 1 // struct hierarchy
 	}
 	lcmem := strings.ToLower(cmem)
+	name := ""
 	for _, field := range fields {
 		lm := strings.ToLower(field.name)
 		for _, sm := range skipmembers {
@@ -200,24 +203,30 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 			}
 		}
 		if len(field.tag) > 0 {
+			name = field.tag
 			v, ok = mkeys[field.tag]
 		} else {
+			name = field.name
 			v, ok = mkeys[lm]
 		}
 		// If map key is missing, then record it
 		// if there's no omitempty tag or we're ignoring  omitempty tag.
 		if !ok && (!field.omitempty || !omitemptyOK) {
 			if len(cmem) > 0 {
-				*s = append(*s, cmem+`.`+field.name)
+				// *s = append(*s, cmem+`.`+field.name)
+				*s = append(*s, cmem+`.`+name)
 			} else {
-				*s = append(*s, field.name)
+				// *s = append(*s, field.name)
+				*s = append(*s, name)
 			}
 			goto next // don't drill down further; no key in JSON object
 		}
 		if len(cmem) > 0 {
-			checkMembers(v, field.val, s, cmem+`.`+field.name)
+			// checkMembers(v, field.val, s, cmem+`.`+field.name)
+			checkMembers(v, field.val, s, cmem+`.`+name)
 		} else {
-			checkMembers(v, field.val, s, field.name)
+			// checkMembers(v, field.val, s, field.name)
+			checkMembers(v, field.val, s, name)
 		}
 	next:
 	}

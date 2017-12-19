@@ -10,6 +10,34 @@ USAGE
 
 https://godoc.org/github.com/clbanning/checkjson
 
+	Example:
+	
+	data := `
+	{
+		"elem1":"a simple element",
+		"elem2": {
+			"subelem":"something more complex", 
+			"notes":"take a look at this" }
+	   "elem4":"extraneous" 
+	}
+
+	type sub struct {
+		Subelem string `xml:"subelem,omitempty"`
+		Another string `xml:"another"`
+	}
+	type elem struct {
+		Elem1 string `xml:"elem1"`
+		Elem2 sub    `xml:"elem2"`
+		Elem3 bool   `xml:"elem3"`
+	}
+
+	e := new(elem)
+	result, _ := MissingJSONTags([]byte(data), e)
+	// result: [elem2.another elem3]
+
+	result, _ = UnknownJSONTags([]byte(data), e)
+	// result: [elem2.notes elem4]
+
 MOTIVATION
 
 I make extensive use of JSON configuration files.  Sometimes the files are large or
