@@ -19,7 +19,7 @@ https://godoc.org/github.com/clbanning/checkjson
 	      "subelem":"something more complex", 
 	      "notes":"take a look at this" }
 	   "elem4":"extraneous" 
-	}
+	}`
 
 	type sub struct {
 	   Subelem string `xml:"subelem,omitempty"`
