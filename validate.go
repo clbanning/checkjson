@@ -173,7 +173,10 @@ func checkFields(mv interface{}, val reflect.Value) error {
 // the JSON context - key:value - if possible.  (This is useful
 // when errors occur when unmarshaling large JSON objects.)
 func ResolveJSONError(data []byte, err error) error {
-	if e, ok := err.(*json.UnmarshalTypeError); ok {
+	// NOTE: don't need to worry about json.UnmarshalTypeError since all 
+	// unmarshaling is into map[string]interface{}.  In this package we're
+	// (currently) just interested in matching JSON keys with struct members.
+	if e, ok := err.(*json.SyntaxError); ok {
 		// grab stuff ahead of the error
 		var i int
 		var getKey bool
@@ -189,7 +192,7 @@ func ResolveJSONError(data []byte, err error) error {
 		}
 	done:
 		info := strings.TrimSpace(string(data[i+1 : int(e.Offset)]))
-		return fmt.Errorf("%s - at: %s", e.Error(), info)
+		return fmt.Errorf("%s - at: %s (stopped at position: %d)", e.Error(), info, e.Offset)
 	}
 	// just report all other unmarshal errors
 	return err
