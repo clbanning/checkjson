@@ -16,4 +16,18 @@ func  TestResolveJSONError(t *testing.T) {
 		t.Fatal("JSON error not caught")
 	}
 	fmt.Println(ResolveJSONError([]byte(src), err))
+
+	src = `{"this":{"is":["a", "test"],"of":"ResolveJSONError", "with":"a","quote:missing}}`
+	err = json.Unmarshal([]byte(src), m)
+	if err == nil {
+		t.Fatal("JSON error not caught")
+	}
+	fmt.Println(ResolveJSONError([]byte(src), err))
+
+	src = `{"this":{"is":["a", "test"],"of":"ResolveJSONError", "with":"a", quote:missing}}`
+	err = json.Unmarshal([]byte(src), m)
+	if err == nil {
+		t.Fatal("JSON error not caught")
+	}
+	fmt.Println(ResolveJSONError([]byte(src), err))
 }
