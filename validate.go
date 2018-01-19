@@ -7,7 +7,7 @@
 // struct member names/tags to see if they will be decoded using encoding/json package.
 //
 // There are several options: Validate returns an error on the first key:value pair
-// that won't decode, and UnknownJSONKeys returns a slice of all the keys that won' be decoded.
+// that won't decode, and UnknownJSONKeys returns a slice of all the keys that won't be decoded.
 // 
 // A complementary function MissingJSONKeys provides a slice of struct members that won't
 // be set by the JSON object using encoding/json.
