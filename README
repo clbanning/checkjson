@@ -2,6 +2,7 @@ Check that a JSON object's keys correspond to a struct's exported members or JSO
 
 ANNOUNCEMENTS
 
+2018.02.16 - Add test example of using go v1.10 (*Decoder)DisallowUnknownFields()
 2017.02.13 - Handle "-" and "omitempty" JSON tags in struct definitions.
 2017.02.08 - UnknownJSONKeys lists all JSON object keys that won't be decoded. 
 2016.11.18 - MissingJSONKeys lists all struct members that won't be set by JSON object.
@@ -37,6 +38,9 @@ https://godoc.org/github.com/clbanning/checkjson
 
 	result, _ = UnknownJSONKeys([]byte(data), e)
 	// result: [elem2.notes elem4]
+	// NOTE: using the stdlib json.Decoder with (*Decoder)DisallowUnknownFields() set
+	//       will error on the first unknown key; it does not return a slice of all
+	//       unknown keys - see: unknownfieldserr_test.go.
 
 MOTIVATION
 

@@ -19,6 +19,13 @@ import (
 // JSON object keys that may correspond with a struct member that is defined
 // with the JSON tag "-" will not be included in the unknown key slice, since 
 // they are valid keys even though they won't be decoded by the Go stdlib.
+//
+// NOTE: beginning with go v1.10, this is similar to setting
+// (*Decoder)DisallowUnknownFields() for the stdlib json.Decoder; however,
+// the stdlib stops and returns the first unknown key it encounters rather
+// than a slice of all keys in the JSON object that will not be decoded.
+// Also, the stdlib error message does not reference the unknown key with
+// dot-notation; so if the error is deep in a JSON object it may be hard to locate.
 func UnknownJSONKeys(b []byte, val interface{}) ([]string, error) {
 	s := make([]string, 0)
 	m := make(map[string]interface{})
