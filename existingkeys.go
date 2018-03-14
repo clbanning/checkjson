@@ -1,5 +1,5 @@
-// missingkeys.go - check JSON object against struct definition
-// Copyright © 2016-2017 Charles Banning.  All rights reserved.
+// existingkeys.go - check JSON object against struct definition
+// Copyright © 2016-2018 Charles Banning.  All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -11,75 +11,47 @@ import (
 	"strings"
 )
 
-type skipmems struct {
-	val   string
-	depth int
-}
-
-// Slice of dot-notation struct fields that can be missing in JSON object.
-var skipmembers = []skipmems{}
-
-// SetMembersToIgnore creates a list of exported struct field names that should not be checked
-// for as keys in the JSON object.  For hierarchical struct members provide the full path for
-// the member name using dot-notation. Calling SetMembersToIgnore with no arguments -
-// SetMembersToIgnore() - clears the list.
-func SetMembersToIgnore(s ...string) {
-	if len(s) == 0 {
-		skipmembers = skipmembers[:0]
-		return
-	}
-	skipmembers = make([]skipmems, len(s))
-	for i, v := range s {
-		skipmembers[i] = skipmems{strings.ToLower(v), len(strings.Split(v, "."))}
-	}
-}
-
-// Should we ignore "omitempty" struct tags. By default accept tag.
-var omitemptyOK = true
-
-// IgnoreOmitemptyTag determines whether a `json:",omitempty"` tag is recognized or
-// not with respect to the JSON object.  By default MissingJSONKeys will not include
-// struct fields that are tagged with "omitempty" in the list of missing JSON keys.
-// If the function is toggled or passed the optional argument 'false' then missing
-// JSON keys may include those for struct fields with the 'omitempty' JSON tag.
-//
-// Calling IgnoreOmitemptyTag with no arguments toggles the handling on/off.  If
-// the alternative argument is passed, then the argument value determines the
-// "omitempty" handling behavior.
-func IgnoreOmitemptyTag(ok ...bool) {
-	if len(ok) == 0 {
-		omitemptyOK = !omitemptyOK
-		return
-	}
-	omitemptyOK = ok[0]
-}
-
-// MissingJSONKeys returns a list of fields of a struct that will NOT be set
-// by unmarshaling the JSON object; rather, they will assume their default
-// values. For nested structs, field labels are the dot-notation hierachical
-// path for the missing JSON key.  Specific struct fields can be igored
-// when scanning the JSON object by declaring them using SetMembersToIgnore().
+// ExistingJSONKeys returns a list of fields of the struct 'val' that WILL BE set
+// by unmarshaling the JSON object.  It is the complement of MissingJSONKeys.
+// For nested structs, field labels are the dot-notation hierachical
+// path for a JSON key.  Specific struct fields can be igored
+// when scanning the JSON object by declaring them using SetMembersToIgnore.
 // (NOTE: JSON object keys are treated as case insensitive, i.e., there
 // is no distiction between "key":"value" and "Key":"value".)
 //
-// By default keys in the JSON object that are associated with struct fields that
-// have JSON tag "-" are ignored.  If the "omitempty" attribute is included in the
-// struct field tag they are by default also not included in the returned slice.
-// IgnoreOmitemptyTag(false) can be called to override the handling of "omitempty"
-// tags - this might be useful if you want to find the "omitempty" fields that
-// are not set by decoding the JSON object.
-func MissingJSONKeys(b []byte, val interface{}) ([]string, error) {
+// For embedded structs, both the field label for the embedded struct as well
+// as the dot-notation label for that struct's fields are included in the list. Thus,
+//		type Person struct {
+//		   Name NameInfo
+//		   Sex  string
+//		}
+//	
+//		type NameInfo struct {
+//		   First, Middle, Last string
+//		}
+//	
+//		jobj := []byte(`{"name":{"first":"Jonnie","middle":"Q","last":"Public"},"sex":"unkown"}`)
+//		p := Person{}
+// 	
+//		fields, _ := ExistingKeys(jobj, p)
+//		fmt.Println(fields)  // prints: [Name Name.First Name.Middle Name.Last Sex]
+//		
+// Struct fields that have JSON tag "-" are never returned. Struct fields with the tag 
+// attribute "omitempty" will, by default NOT be returned unless the keys exist in the JSON object.
+// If you want to know if "omitempty" struct fields are actually in the JSON object, then call
+// IgnoreOmitEmptyTag(false) prior to using ExistingJSONKeys.
+func ExistingJSONKeys(b []byte, val interface{}) ([]string, error) {
 	s := make([]string, 0)
 	m := make(map[string]interface{})
 	if err := json.Unmarshal(b, &m); err != nil {
 		return s, ResolveJSONError(b, err)
 	}
-	checkMembers(m, reflect.ValueOf(val), &s, "")
+	findMembers(m, reflect.ValueOf(val), &s, "")
 	return s, nil
 }
 
 // cmem is the parent struct member for nested structs
-func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
+func findMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 	// 1. Convert any pointer value.
 	if val.Kind() == reflect.Ptr {
 		val = reflect.Indirect(val) // convert ptr to struc
@@ -108,7 +80,7 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 		sval := reflect.New(tval)
 		slice, ok := mv.([]interface{})
 		if !ok {
-			// encodiong/json must have a JSON array value to decode
+			// encoding/json must have a JSON array value to decode
 			// unlike encoding/xml which will decode a list of elements
 			// to a singleton or vise-versa.
 			*s = append(*s, typ.Name())
@@ -118,7 +90,7 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 		//      This forces all of them to be regular and w/o typos in key labels.
 		for _, sl := range slice {
 			// cmem is the member name for the slice - []<T> - value
-			checkMembers(sl, sval, s, cmem)
+			findMembers(sl, sval, s, cmem)
 		}
 		return // done with reflect.Slice value
 	}
@@ -213,19 +185,18 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 		// If map key is missing, then record it
 		// if there's no omitempty tag or we're ignoring  omitempty tag.
 		if !ok && (!field.omitempty || !omitemptyOK) {
-			if len(cmem) > 0 {
-				// *s = append(*s, cmem+`.`+field.name)
-				*s = append(*s, cmem+`.`+name)
-			} else {
-				// *s = append(*s, field.name)
-				*s = append(*s, name)
-			}
 			goto next // don't drill down further; no key in JSON object
 		}
+		// field exists in JSON object, so add to list
 		if len(cmem) > 0 {
-			checkMembers(v, field.val, s, cmem+`.`+name)
+			*s = append(*s, cmem+`.`+name)
 		} else {
-			checkMembers(v, field.val, s, name)
+			*s = append(*s, name)
+		}
+		if len(cmem) > 0 {
+			findMembers(v, field.val, s, cmem+`.`+name)
+		} else {
+			findMembers(v, field.val, s, name)
 		}
 	next:
 	}
