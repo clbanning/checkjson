@@ -189,9 +189,9 @@ func findMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 		}
 		// field exists in JSON object, so add to list
 		if len(cmem) > 0 {
-			*s = append(*s, cmem+`.`+name)
+			*s = append(*s, cmem+`.`+field.name)
 		} else {
-			*s = append(*s, name)
+			*s = append(*s, field.name)
 		}
 		if len(cmem) > 0 {
 			findMembers(v, field.val, s, cmem+`.`+name)
