@@ -30,7 +30,7 @@ func UnknownJSONKeys(b []byte, val interface{}) ([]string, error) {
 	s := make([]string, 0)
 	m := make(map[string]interface{})
 	if err := json.Unmarshal(b, &m); err != nil {
-		return nil, err
+		return nil, ResolveJSONError(b, err)
 	}
 	if err := checkAllFields(m, reflect.ValueOf(val), &s, ""); err != nil {
 		return s, err
