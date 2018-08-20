@@ -52,6 +52,10 @@ func SetKeysToIgnore(s ...string) {
 // JSON object key that may correspond with a struct member that is defined
 // with the JSON tag "-" will not be reported since it is a valid key even
 // though it won't be decoded by the Go stdlib.
+//
+// NOTE: result is similar to using (*Decoder)DisallowUnknownFields() in
+// encoding/json lib; however, with Validate() error will provide route for
+// for nested JSON object keys.
 func Validate(b []byte, val interface{}) error {
 	m := make(map[string]interface{})
 	if err := json.Unmarshal(b, &m); err != nil {
