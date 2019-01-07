@@ -11,6 +11,8 @@
 // 
 // A complementary function MissingJSONKeys provides a slice of struct members that won't
 // be set by the JSON object using encoding/json.
+//
+// NOTE: this package DOES NOT support recursive struct definitions.
 package checkjson
 
 import (

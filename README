@@ -43,6 +43,10 @@ https://godoc.org/github.com/clbanning/checkjson
 	//       will error on the first unknown key; it does not return a slice of all
 	//       unknown keys - see: unknownfieldserr_test.go.
 
+LIMITATION
+
+This package does not support recursive struct definitions.
+
 MOTIVATION
 
 I make extensive use of JSON configuration files.  Sometimes the files are large or
