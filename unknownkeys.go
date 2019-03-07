@@ -26,6 +26,8 @@ import (
 // than a slice of all keys in the JSON object that will not be decoded.
 // Also, the stdlib error message does not reference the unknown key with
 // dot-notation; so if the error is deep in a JSON object it may be hard to locate.
+// (NOTE: as of 3/5/19, change 145218, the stdlib now reports key using
+// dot-notation, as here.)
 func UnknownJSONKeys(b []byte, val interface{}) ([]string, error) {
 	s := make([]string, 0)
 	m := make(map[string]interface{})
