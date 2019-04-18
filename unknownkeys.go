@@ -15,6 +15,9 @@ import (
 // UnknownJSONKeys returns a slice of the JSON object keys that will not
 // be decoded to a member of 'val', which is of type struct.  For nested
 // JSON objects the keys are reported using dot-notation.
+// (NOTE: JSON object keys and tags are treated as case insensitive, i.e., there
+// is no distiction between "keylabel":"value" and "Keylabel":"value" and 
+// "keyLabel":"value".)
 //
 // JSON object keys that may correspond with a struct member that is defined
 // with the JSON tag "-" will not be included in the unknown key slice, since 
@@ -113,7 +116,7 @@ func checkAllFields(mv interface{}, val reflect.Value, s *[]string, key string) 
 		}
 		t := typ.Field(i).Tag.Get("json")
 		tags := strings.Split(t, ",")
-		tag := tags[0]
+		tag := strings.ToLower(tags[0])
 		if tag == "-" {
 			tag = ""
 		}
@@ -146,7 +149,7 @@ func checkAllFields(mv interface{}, val reflect.Value, s *[]string, key string) 
 			*s = append(*s, tkey)
 			return nil
 		}
-		if len(spec.tag) > 0 && spec.tag != k { // JSON key doesn't match Field tag
+		if len(spec.tag) > 0 && spec.tag != lk { // JSON key doesn't match Field tag
 			if k == "" {
 				tkey = "[" + spec.tag + "]"
 			} else {

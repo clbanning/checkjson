@@ -50,6 +50,9 @@ func SetKeysToIgnore(s ...string) {
 // Validate scans a JSON object and returns an error when it encounters
 // a key:value pair that will not decode to a member of the 'val' 
 // of type struct using the "encoding/json" package. 
+// (NOTE: JSON object keys and tags are treated as case insensitive, i.e., there
+// is no distiction between "keylabel":"value" and "Keylabel":"value" and 
+// "keyLabel":"value".)
 //
 // JSON object key that may correspond with a struct member that is defined
 // with the JSON tag "-" will not be reported since it is a valid key even
@@ -138,7 +141,7 @@ func checkFields(mv interface{}, val reflect.Value) error {
 		var tag string
 		t := typ.Field(i).Tag.Get("json")
 		tags := strings.Split(t, ",")
-		tag = tags[0]
+		tag = strings.ToLower(tags[0])
 		// handle ignore member JSON tag, "-"
 		if tag == "-" {
 			tag = ""
@@ -163,7 +166,7 @@ func checkFields(mv interface{}, val reflect.Value) error {
 		if !ok {
 			return fmt.Errorf("no member for JSON key: %s", k)
 		}
-		if len(spec.tag) > 0 && spec.tag != k { // JSON key doesn't match Field tag
+		if len(spec.tag) > 0 && spec.tag != lk { // JSON key doesn't match Field tag
 			return fmt.Errorf("key: %s -  does not match tag: %s", k, spec.tag)
 		}
 		if err := checkFields(m, spec.val); err != nil { // could be nested structs

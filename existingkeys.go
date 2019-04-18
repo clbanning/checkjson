@@ -16,8 +16,9 @@ import (
 // For nested structs, field labels are the dot-notation hierachical
 // path for a JSON key.  Specific struct fields can be igored
 // when scanning the JSON object by declaring them using SetMembersToIgnore.
-// (NOTE: JSON object keys are treated as case insensitive, i.e., there
-// is no distiction between "key":"value" and "Key":"value".)
+// (NOTE: JSON object keys and tagsare treated as case insensitive, i.e., there
+// is no distiction between "keylabel":"value" and "Keylabel":"value" and
+// "keyLabel":"value".)
 //
 // For embedded structs, both the field label for the embedded struct as well
 // as the dot-notation label for that struct's fields are included in the list. Thus,
@@ -25,18 +26,18 @@ import (
 //		   Name NameInfo
 //		   Sex  string
 //		}
-//	
+//
 //		type NameInfo struct {
 //		   First, Middle, Last string
 //		}
-//	
+//
 //		jobj := []byte(`{"name":{"first":"Jonnie","middle":"Q","last":"Public"},"sex":"unkown"}`)
 //		p := Person{}
-// 	
+//
 //		fields, _ := ExistingKeys(jobj, p)
 //		fmt.Println(fields)  // prints: [Name Name.First Name.Middle Name.Last Sex]
-//		
-// Struct fields that have JSON tag "-" are never returned. Struct fields with the tag 
+//
+// Struct fields that have JSON tag "-" are never returned. Struct fields with the tag
 // attribute "omitempty" will, by default NOT be returned unless the keys exist in the JSON object.
 // If you want to know if "omitempty" struct fields are actually in the JSON object, then call
 // IgnoreOmitEmptyTag(false) prior to using ExistingJSONKeys.
@@ -131,7 +132,7 @@ func findMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 		}
 		t := typ.Field(i).Tag.Get("json")
 		tags := strings.Split(t, ",")
-		tag = tags[0]
+		tag = strings.ToLower(tags[0])
 		// handle ignore member JSON tag, "-"
 		if tag == "-" {
 			continue
@@ -143,11 +144,7 @@ func findMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 				break
 			}
 		}
-		if tag == "" {
-			fields = append(fields, &fieldSpec{typ.Field(i).Name, val.Field(i), "", oempty})
-		} else {
-			fields = append(fields, &fieldSpec{typ.Field(i).Name, val.Field(i), tag, oempty})
-		}
+		fields = append(fields, &fieldSpec{typ.Field(i).Name, val.Field(i), tag, oempty})
 	}
 
 	// 5. check that field names/tags have corresponding map key

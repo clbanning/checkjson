@@ -59,8 +59,9 @@ func IgnoreOmitemptyTag(ok ...bool) {
 // values. For nested structs, field labels are the dot-notation hierachical
 // path for the missing JSON key.  Specific struct fields can be igored
 // when scanning the JSON object by declaring them using SetMembersToIgnore().
-// (NOTE: JSON object keys are treated as case insensitive, i.e., there
-// is no distiction between "key":"value" and "Key":"value".)
+// (NOTE: JSON object keys and tags are treated as case insensitive, i.e., there
+// is no distiction between "keylabel":"value" and "Keylabel":"value" and
+// "keyLabel":"value".)
 //
 // By default keys in the JSON object that are associated with struct fields that
 // have JSON tag "-" are ignored.  If the "omitempty" attribute is included in the
@@ -159,7 +160,7 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 		}
 		t := typ.Field(i).Tag.Get("json")
 		tags := strings.Split(t, ",")
-		tag = tags[0]
+		tag = strings.ToLower(tags[0])
 		// handle ignore member JSON tag, "-"
 		if tag == "-" {
 			continue
@@ -171,11 +172,7 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 				break
 			}
 		}
-		if tag == "" {
-			fields = append(fields, &fieldSpec{typ.Field(i).Name, val.Field(i), "", oempty})
-		} else {
-			fields = append(fields, &fieldSpec{typ.Field(i).Name, val.Field(i), tag, oempty})
-		}
+		fields = append(fields, &fieldSpec{typ.Field(i).Name, val.Field(i), tag, oempty})
 	}
 
 	// 5. check that field names/tags have corresponding map key
