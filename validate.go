@@ -1,6 +1,6 @@
 // validate.go - check JSON object against struct definition
-// Copyright © 2016, 2017 Charles Banning.  All rights reserved.
-// Use of this source code is governed by a BSD-style
+// Copyright © 2016-2019 Charles Banning.  All rights reserved.
+// Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
 // Package checkjson provides functions for checking JSON object keys against
