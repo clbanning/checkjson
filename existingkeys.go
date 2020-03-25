@@ -16,7 +16,7 @@ import (
 // For nested structs, field labels are the dot-notation hierachical
 // path for a JSON key.  Specific struct fields can be igored
 // when scanning the JSON object by declaring them using SetMembersToIgnore.
-// (NOTE: JSON object keys and tagsare treated as case insensitive, i.e., there
+// (NOTE: JSON object keys and tags are treated as case insensitive, i.e., there
 // is no distiction between "keylabel":"value" and "Keylabel":"value" and
 // "keyLabel":"value".)
 //
