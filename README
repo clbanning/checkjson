@@ -2,6 +2,7 @@ Check that a JSON object's keys correspond to a struct's exported members or JSO
 
 ANNOUNCEMENTS
 
+2021.08.18 - Merge in handling of `checkjson:"norecurse"` struct member tag.
 2018.03.14 - Add ExistingJSONKeys()
 2018.02.16 - Add test example of using go v1.10 (*Decoder)DisallowUnknownFields()
 2017.02.13 - Handle "-" and "omitempty" JSON tags in struct definitions.

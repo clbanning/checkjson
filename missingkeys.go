@@ -69,6 +69,8 @@ func IgnoreOmitemptyTag(ok ...bool) {
 // IgnoreOmitemptyTag(false) can be called to override the handling of "omitempty"
 // tags - this might be useful if you want to find the "omitempty" fields that
 // are not set by decoding the JSON object.
+//
+// If the struct has a member struct with `checkjson:"norecurse"` tag, then it is not scanned.
 func MissingJSONKeys(b []byte, val interface{}) ([]string, error) {
 	s := make([]string, 0)
 	m := make(map[string]interface{})
@@ -80,6 +82,7 @@ func MissingJSONKeys(b []byte, val interface{}) ([]string, error) {
 }
 
 // cmem is the parent struct member for nested structs
+// If the struct has a member struct with `checkjson:"norecurse"` tag, then it is not scanned.
 func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 	// 1. Convert any pointer value.
 	if val.Kind() == reflect.Ptr {
