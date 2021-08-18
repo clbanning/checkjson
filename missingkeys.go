@@ -148,13 +148,16 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 		val       reflect.Value
 		tag       string
 		omitempty bool
+		norecurse bool
 	}
 	fields := make([]*fieldSpec, 0) // use a list so members are in sequence
 	var tag string
 	var oempty bool
+	var norecurse bool
 	for i := 0; i < val.NumField(); i++ {
 		tag = ""
 		oempty = false
+		norecurse = false
 		if len(typ.Field(i).PkgPath) > 0 {
 			continue // field is NOT exported
 		}
@@ -172,7 +175,12 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 				break
 			}
 		}
-		fields = append(fields, &fieldSpec{typ.Field(i).Name, val.Field(i), tag, oempty})
+		t = typ.Field(i).Tag.Get("checkjson")
+		if t == "norecurse" {
+			norecurse = true
+			break
+		}
+		fields = append(fields, &fieldSpec{typ.Field(i).Name, val.Field(i), tag, oempty, norecurse})
 	}
 
 	// 5. check that field names/tags have corresponding map key
@@ -218,6 +226,9 @@ func checkMembers(mv interface{}, val reflect.Value, s *[]string, cmem string) {
 				*s = append(*s, name)
 			}
 			goto next // don't drill down further; no key in JSON object
+		}
+		if field.norecurse {
+			goto next // don't drill down further
 		}
 		if len(cmem) > 0 {
 			checkMembers(v, field.val, s, cmem+`.`+name)

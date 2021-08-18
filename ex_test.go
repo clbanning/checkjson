@@ -12,14 +12,23 @@ func TestEx(t *testing.T) {
 	{
 		"elem1":"a simple element",
 		"elem2": {
-			"subelem":"something more complex", 
-			"notes"  :"take a look at this" },
+			"subelem":"something more complex",
+			"notes"  :"take a look at this",
+			"strange": {
+				"irr":3,
+				"strange_ex":"extraneous_but_ignore"
+			}
+		},
 	   "elem4":"extraneous" 
 	}`
 
+	type strange struct {
+		Irrelevant int
+	}
 	type sub struct {
 		Subelem string `json:"subelem,omitempty"`
 		Another string `json:"another"`
+		Strange strange `checkjson:"norecurse"`
 	}
 	type elem struct {
 		Elem1 string `json:"elem1"`
