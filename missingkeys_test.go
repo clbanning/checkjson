@@ -158,13 +158,17 @@ func TestJSONKeysWithIgnoreTags(t *testing.T) {
 func TestJSONKeysWithOmitemptyTags(t *testing.T) {
 	fmt.Println("===================== TestJSONKeysWithmitemptyIgnoreTag ...")
 
+	type nested struct {
+		Irrel bool
+	}
 	type test struct {
 		Ok  bool
 		Why string
 		Whynot string `json:",omitempty"`
+		Ignored nested `checkjson:"norecurse"`
 	}
 	tv := test{}
-	data := []byte(`{"ok":true,"why":"it's a test"}`)
+	data := []byte(`{"ok":true,"why":"it's a test","ignored":{"wildcard":"any"}}`)
 
 	IgnoreOmitemptyTag(true)
 	mems, err := MissingJSONKeys(data, tv)
